@@ -1,0 +1,510 @@
+# MARK I PERCEPTRON SIMULATOR - COMPLETE BUILD SPECIFICATION
+# This document contains all instructions needed to recreate this application using Claude Code or similar AI.
+# Feed this entire document to Claude Code along with the reference image (perceptrons.png in c:\temp\).
+
+================================================================================
+PART 1: PROJECT OVERVIEW
+================================================================================
+
+Build a Windows Forms desktop application in C# that faithfully recreates Frank Rosenblatt's 1958 Mark I Perceptron with an authentic vintage industrial aesthetic. The simulator serves as both an educational tool and a historical tribute to the birth of neural networks.
+
+Target: .NET 8.0+ Windows Forms standalone application
+Font: Use Consolas throughout (fixed-width, 1980s terminal feel)
+Aesthetic: Black background, vintage industrial control panel look with metallic textures, brushed metal, and glow effects simulating backlit plastic buttons.
+
+================================================================================
+PART 2: PERCEPTRON ALGORITHM
+================================================================================
+
+The perceptron is a single-layer neural network that classifies binary patterns.
+
+FORMULA:
+  OUTPUT = SUM( Switch(i) * Weight(i) ) + Bias
+
+Where:
+  - Switch(i) = +1 if ON, -1 if OFF (not 0/1!)
+  - Weight(i) = dial value from -30 to +30
+  - Bias = bias dial value from -30 to +30
+  - OUTPUT = real number (displayed on analog meter)
+
+CLASSIFICATION:
+  - Positive output = one class (e.g., "T" shape)
+  - Negative output = other class (e.g., "J" shape)
+
+LEARNING RULE (Perceptron Learning Algorithm):
+When pressing [Learn +] (want POSITIVE output) AND output is currently wrong:
+  - For each ON switch: weight[i] += learningRate
+  - For each OFF switch: weight[i] -= learningRate
+  - Bias += learningRate
+
+When pressing [Learn -] (want NEGATIVE output) AND output is currently wrong:
+  - For each ON switch: weight[i] -= learningRate
+  - For each OFF switch: weight[i] += learningRate
+  - Bias -= learningRate
+
+IMPORTANT: If output is already correct sign, NO changes are made.
+All weights clamped to range [-30, +30].
+
+================================================================================
+PART 3: APPLICATION STRUCTURE
+================================================================================
+
+SOLUTION STRUCTURE:
+PerceptronSimulator/
+├── PerceptronSimulator.csproj
+├── Program.cs
+├── MainForm.cs
+├── ManualDialog.cs
+├── DebugDialog.cs
+├── PerceptronEngine.cs
+├── Controls/
+│   ├── SwitchControl.cs
+│   ├── KnobControl.cs
+│   ├── SettingsKnobControl.cs
+│   ├── AnalogMeterControl.cs
+│   ├── OutputLedControl.cs
+│   ├── MechanicalPushButton.cs
+│   ├── ArrowButton.cs
+│   ├── MetalLabelControl.cs
+│   ├── MetalPlateControl.cs
+│   ├── MetalPlateButton.cs
+│   ├── FormulaPlateControl.cs
+│   └── FlatNumericUpDown.cs
+└── resources/
+    ├── perceptrons.png
+    └── prompt.txt
+
+================================================================================
+PART 4: MAIN FORM LAYOUT
+================================================================================
+
+WINDOW CHROME:
+- FormBorderStyle = None (custom chrome)
+- Black background
+- Custom title bar at top (30px height, dark gray #141414)
+- Title text centered: "Mark I Perceptron Simulator by Frank Rosenblatt, Cornell, 1958"
+- Red X close button in top right
+- Window is draggable by title bar
+- Window is resizable (implement WM_NCHITTEST for edge detection)
+- Small red diagonal lines in bottom-right corner indicating resize grip
+- Minimum size: 700x580
+
+MAIN LAYOUT (three columns):
+Left Panel (Switch Panel):
+  - Contains NxN grid of SwitchControls
+  - "Off=-1v On=+1v" metal label at top (subdued)
+  - D-pad arrow buttons below switches (pale yellow glow)
+
+Center Panel (Knob Panel):
+  - Contains NxN grid of KnobControls (matching switches)
+  - One extra Bias knob at bottom center
+  - "BIAS" metal label to the LEFT of bias knob
+
+Right Panel (Output Panel):
+  - Analog meter at top (range -100 to +100)
+  - Large output LED below meter (green when output > 0)
+  - Formula plate showing the equation
+  - Operating instructions metal plate
+  - Video Tutorial metal label link (green text, clickable)
+
+Bottom Panel (Control Panel, 120px height):
+  Layout from left to right:
+  - RESET label + Master Switch (50x90, larger than regular switches)
+  - Grid Size label + SettingsKnob (1-10, starts at 4)
+  - [centered] LEARN+ label + round button
+  - [centered] RATE label + SettingsKnob (-30 to +30, step 0.05, default 10.0, zero points up)
+  - [centered] LEARN- label + round button
+  - SAVE square button (glows green when weights dirty)
+  - LOAD square button (faint red glow)
+  - BRAIN square button (yellow glow, opens debug dialog)
+  - MANUAL square button (yellow glow, opens manual dialog)
+  - Version label in bottom right corner (e.g., "v. 2025-12-29")
+
+================================================================================
+PART 5: CUSTOM CONTROLS SPECIFICATIONS
+================================================================================
+
+All controls use GDI+ for rendering with SmoothingMode.AntiAlias.
+All controls inherit from Control and use ControlStyles for double buffering.
+
+----- SwitchControl -----
+Size: Default 50x80 (scalable for larger grids)
+Components:
+  - LED indicator at top (red when ON, dark when OFF)
+  - LED has glow effect when ON (alpha 40 red glow)
+  - Toggle track (dark gray rounded rectangle)
+  - Toggle handle (moves up/down based on state)
+  - Toggle color: ON = Color.FromArgb(100, 100, 100), OFF = Color.FromArgb(70, 70, 70)
+  - Border brightens on hover
+Behavior:
+  - Clicking toggles state
+  - Space bar toggles when focused
+  - StateChanged event
+  - Value property: +1 when ON, -1 when OFF
+
+----- KnobControl -----
+Size: Default 70x90 (scalable)
+Range: -30 to +30
+Components:
+  - Circular knob with pointer indicator
+  - Tick marks around circumference
+  - Major ticks at -30, 0, +30
+  - Value display below knob
+  - Metallic gradient (dark gray tones)
+  - Subtle glow/highlight at top
+Behavior:
+  - Click to select (becomes "active" knob)
+  - Arrow keys change value when active
+  - Mouse drag rotates knob
+  - Step size: 0.05 (fine control)
+  - Zero points straight UP
+  - ValueChanged event
+
+----- SettingsKnobControl -----
+Similar to KnobControl but with configurable range.
+Properties:
+  - MinValue, MaxValue, Step
+  - TickValues, MajorTickValues
+  - MinValuePointsUp (if true, min value points up; if false and symmetric range, zero points up)
+  - ValueFormat (e.g., "0", "0.00")
+Used for: Grid Size (1-10), Learning Rate (-30 to +30)
+
+----- AnalogMeterControl -----
+Size: 180x130
+Range: -100 to +100
+Components:
+  - Circular arc gauge
+  - Needle that rotates based on value
+  - Graduation marks
+  - Metallic bezel around edge
+  - Dark face with light markings
+
+----- OutputLedControl -----
+Large LED indicator
+Components:
+  - Circular LED (green when on, dark when off)
+  - Glow effect when ON using PathGradientBrush
+  - "OUTPUT" label below
+
+----- MechanicalPushButton -----
+Two variants: IsSquare = true (rectangular) or IsSquare = false (round)
+Size: Approximately 50x55
+Components:
+  - Metal plate label above button with text
+  - Four corner divots (screw holes) on label plate
+  - Button with recessed housing (dark)
+  - Button bezel (gradient)
+  - Button face (gradient, darker when pressed)
+  - Glow effect inside button using PathGradientBrush
+Glow Colors:
+  - BRAIN, MANUAL: Yellow glow Color.FromArgb(255, 220, 80)
+  - SAVE: Conditional - green when weights dirty, none otherwise
+  - LOAD: Faint red Color.FromArgb(200, 80, 60)
+  - LEARN+: Conditional - green when any switch ON, none otherwise
+  - LEARN-: Conditional - yellow when any switch ON, none otherwise
+Behavior:
+  - Visual press state on mouse down
+  - ButtonClick event on mouse up
+
+----- ArrowButton -----
+Triangular directional buttons (D-pad style)
+Directions: Up, Down, Left, Right
+Size: Up/Down = 40x16, Left/Right = 16x40
+Components:
+  - Triangular shape pointing in direction
+  - Pale yellow glow effect
+  - Metallic gradient
+Behavior:
+  - Clicking shifts the switch pattern in that direction
+  - Patterns shift and wrap out (bits that shift off disappear)
+
+----- MetalLabelControl -----
+Metal plate with engraved text
+Components:
+  - Linear gradient background (dark greens/grays)
+  - Brushed texture (faint horizontal lines)
+  - Beveled edges (light top, dark bottom)
+  - Four corner screws/divots
+  - Engraved text (shadow + light text)
+Properties:
+  - LabelText: The text to display
+  - Subdued: When true, uses more muted colors
+  - CustomTextColor: Optional override for text color (used for video link = green)
+
+----- MetalPlateControl -----
+Larger instruction plate for multi-line text
+Components:
+  - Similar metallic styling to MetalLabelControl
+  - Supports multiple lines of text (InstructionLines array)
+  - Text appears engraved
+
+----- FormulaPlateControl -----
+Displays the perceptron formula
+Shows: "Output = Σ(Switch × Weight) + Bias"
+
+================================================================================
+PART 6: MANUAL DIALOG
+================================================================================
+
+Modal dialog with custom chrome (same style as main form)
+Size: 620x750
+Contains: PaperPanel with aged paper texture
+
+PAPER STYLING:
+  - Background: Color.FromArgb(242, 238, 225) (aged paper)
+  - Random noise dots for texture (seeded random for consistency)
+  - Diagonal "DECLASSIFIED" watermark (red-brown, alpha ~40)
+  - Subtext under watermark: "Declassified in 2005 as per the 1995 Executive Order 12958 3.4"
+  - Typewriter font: "Courier New"
+
+TABLE OF CONTENTS (First Page):
+Title: "MARK I PERCEPTRON OPERATOR'S MANUAL"
+Chapters (with fake page numbers and dot leaders):
+  I.    Introduction........................3
+  II.   Press Release.......................5
+  III.  [REDACTED].........................7
+  IV.   Operating Procedures...............12
+  V.    [REDACTED]........................18
+  VI.   The Algorithm......................24
+  VII.  [REDACTED]........................29
+  VIII. [REDACTED]........................34
+  IX.   Credits / About....................39
+  X.    Build It Yourself..................45
+  XI.   [REDACTED]........................51
+
+Clickable chapters open their content pages.
+Redacted entries show black bars (varying widths for authenticity).
+One redaction shows a partial letter peeking out.
+
+NAVIGATION:
+  - "<- Prev" and "Next ->" links at bottom
+  - "[TABLE OF CONTENTS]" link at top of each chapter page
+  - Page number displayed at bottom center
+
+CHAPTER CONTENT:
+
+I. Introduction:
+  - History of 1958 perceptron
+  - Frank Rosenblatt at Cornell
+  - IBM 704 demonstration
+  - NY Times headlines
+  - Mark I machine description (400 photocells, motor-adjusted potentiometers)
+
+II. Press Release:
+  - Full text of July 13, 1958 New York Times article
+  - Navy demonstration description
+  - Quotes from Dr. Rosenblatt
+  - Predictions about future capabilities
+
+III. Operating Procedures:
+  - Step-by-step T vs J training example
+  - How to use Learn+ and Learn- buttons
+  - Reset switch usage
+
+V. The Algorithm:
+  - Formula explanation
+  - Learning rule details
+  - When to press each button (table format)
+  - Role of bias explanation
+
+VII. Credits / About:
+  - Acknowledgment of Welch Labs
+  - Link to YouTube video
+  - Link to original manual PDF
+  - Created by line with GitHub
+
+IX. Build It Yourself:
+  - Explanation that program was built with AI
+  - "View Reference Image" button (extracts perceptrons.png from resources)
+  - "View Prompts" button (extracts prompt.txt from resources)
+
+================================================================================
+PART 7: DEBUG DIALOG (BRAIN VISUALIZATION)
+================================================================================
+
+Modeless dialog that shows neural network diagram
+Updates in real-time as switches/weights change
+
+LAYOUT:
+  - Left column: Input nodes (one per switch)
+  - Middle column: Weight nodes (one per dial)
+  - Right: Single output node
+  - Bias node feeding into output
+  - Lines connecting nodes show data flow
+
+COLORING:
+  - Background: Black
+  - Input nodes: Red if receiving 1, White otherwise
+  - Lines: White if no signal, Light blue if carrying value
+  - Numbers: Green for positive, Yellow for negative
+  - If nodes large enough, show dial value inside
+
+SCALING:
+  - Dialog is resizable
+  - Nodes scale with available space
+  - Smaller grids = larger nodes
+
+================================================================================
+PART 8: DYNAMIC SCALING
+================================================================================
+
+When grid size changes (1-10):
+  - Switches and knobs scale down for larger grids (7x7+)
+  - Formula for switch size at 7+: Math.Max(28, 50 - (gridSize - 6) * 7) width
+  - Formula for knob size at 7+: Math.Max(45, 70 - (gridSize - 6) * 8) width
+  - Window auto-grows to fit grid
+  - At 8x8+, shift knob panel slightly right for better fit
+  - At 8x8+, reduce output panel width
+
+================================================================================
+PART 9: SAVE/LOAD FUNCTIONALITY
+================================================================================
+
+File format: JSON with .pcn extension
+Saved data:
+  {
+    "GridSize": 4,
+    "Weights": [array of doubles],
+    "Bias": 0.0,
+    "LearningRate": 10.0
+  }
+
+On load: Resize grid if needed, then apply weights.
+Track "dirty" state - Save button glows green when weights modified since last save.
+
+================================================================================
+PART 10: EMBEDDED RESOURCES
+================================================================================
+
+Embed these files as resources in the assembly:
+  - resources/perceptrons.png (reference image showing target UI)
+  - resources/prompt.txt (this prompt file)
+
+Resource naming: "PerceptronSimulator.resources.{filename}"
+
+"Build It Yourself" chapter extracts these to temp folder and opens them.
+
+================================================================================
+PART 11: VISUAL DETAILS AND COLORS
+================================================================================
+
+MAIN COLORS:
+  - Background: Black (#000000)
+  - Title bar: #141414
+  - Panel backgrounds: #0F0F0F
+  - Control panel: #141414
+
+METAL PLATE COLORS:
+  - Gradient top: Color.FromArgb(70, 75, 70)
+  - Gradient bottom: Color.FromArgb(50, 55, 50)
+  - Border: Color.FromArgb(40, 45, 40)
+  - Screw holes: Color.FromArgb(25, 30, 25)
+  - Text shadow: Color.FromArgb(30, 35, 30)
+  - Text: Color.FromArgb(130, 135, 130)
+  - Subdued text: Color.FromArgb(85, 90, 85)
+
+BUTTON COLORS:
+  - Housing: #0F0F0F
+  - Bezel gradient: #464B46 to #232823
+  - Face normal: #373737 to #232323
+  - Face hover: #464646 to #323232
+  - Face pressed: #282828 to #191919
+
+GLOW EFFECTS:
+  - Use PathGradientBrush for radial glow
+  - Center alpha: 60-100 depending on state
+  - Edge alpha: 10
+  - Center offset slightly down-left for natural look
+  - Add secondary highlight spot
+
+LED COLORS:
+  - ON: Color.FromArgb(255, 60, 60) with glow
+  - OFF: Color.FromArgb(60, 20, 20)
+  - Output LED ON: Green with glow
+  - Output LED OFF: Dark
+
+================================================================================
+PART 12: TOOLTIPS
+================================================================================
+
+All major controls have hover tooltips:
+  - Grid Size: "Number of switches/knobs per row and column (NxN grid)"
+  - Learning Rate: "How much to adjust dial weights when learning (higher = faster learning)"
+  - BIAS label: "The bias allows the decision boundary to shift away from the origin..."
+  - Arrow buttons: "Shift pattern up/down/left/right"
+  - Learn buttons: Explain what they do
+  - Save/Load: "Save/Load current weights to/from file"
+  - Brain: "Show neural network visualization"
+
+Tooltip styling: Dark background, light text, custom drawn.
+
+================================================================================
+PART 13: KEYBOARD AND MOUSE INTERACTION
+================================================================================
+
+KNOB INTERACTION:
+  - Click a knob to make it "active"
+  - Arrow keys (up/down/left/right) change active knob value
+  - Arrow keys should NOT tab between controls (override PreProcessMessage)
+  - Tab key moves between controls normally
+
+SWITCH INTERACTION:
+  - Click toggles switch
+  - Space bar toggles focused switch
+
+MASTER SWITCH (RESET):
+  - Shows ON if ANY switch is on
+  - Toggling sets ALL switches to that state
+
+PATTERN SHIFT (D-PAD):
+  - Clicking arrow button shifts entire pattern in that direction
+  - Bits that shift out disappear (no wrap)
+
+================================================================================
+PART 14: PUBLISH PROFILE
+================================================================================
+
+Create publish profile for single-file EXE deployment:
+  - Framework-dependent or self-contained
+  - Single file
+  - Output to c:\perceptron_release\
+  - Include embedded resources
+
+================================================================================
+PART 15: SPECIFIC IMPLEMENTATION NOTES
+================================================================================
+
+1. GraphicsExtensions: Create extension methods FillRoundedRectangle and DrawRoundedRectangle for Graphics class.
+
+2. Main form resize: Use WndProc and WM_NCHITTEST to detect edge hovering for resize.
+
+3. Grid Size knob: MinValuePointsUp = true (1 points up, increases clockwise)
+
+4. Learning Rate knob: MinValuePointsUp = false (0 points up for symmetric -30 to +30 range)
+
+5. Learn button glow: Only show glow when at least one switch is ON.
+
+6. Save button glow: Only show green glow when _weightsDirty flag is true.
+
+7. Video Tutorial: Use MetalLabelControl with CustomTextColor = Color.FromArgb(100, 180, 100) for green link text.
+
+8. Manual chapters use Roman numerals (I, II, III, IV, V, VI, VII, VIII, IX, X, XI).
+
+9. Default learning rate is 10.0, not 1.0.
+
+10. Switches output +1 or -1, never 0.
+
+================================================================================
+END OF SPECIFICATION
+================================================================================
+
+To build this application:
+1. Place perceptrons.png in c:\temp\ as reference
+2. Feed this entire document to Claude Code
+3. Let Claude create the project structure and implement each component
+4. Test with T vs J pattern recognition
+
+This program demonstrates that complex, polished desktop applications can be created through natural language prompts - "executable English."
+
+Created by S. Rives using Claude Code AI.
+https://github.com/srives

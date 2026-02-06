@@ -1,0 +1,19 @@
+## .NET build artifacts
+bin/
+obj/
+publish/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+
+## Rider
+.idea/
+
+## OS files
+Thumbs.db
+Desktop.ini
+
+## Windows null device file (created by tools that write to "nul" incorrectly)
+nul
