@@ -2,6 +2,7 @@
 bin/
 obj/
 publish/
+reposPerceptronbinbuildtest/
 
 ## Visual Studio
 .vs/

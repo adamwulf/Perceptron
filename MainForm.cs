@@ -112,6 +112,16 @@ public class MainForm : Form
         Font = new Font("Consolas", 9f);
         DoubleBuffered = true;
 
+        // Set application icon (shows in taskbar and Alt+Tab)
+        try
+        {
+            var iconStream = System.Reflection.Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream("PerceptronSimulator.resources.app.ico");
+            if (iconStream != null)
+                Icon = new Icon(iconStream);
+        }
+        catch { }
+
         // Create tooltip with custom colors
         _toolTip = new ToolTip
         {
@@ -182,15 +192,37 @@ public class MainForm : Form
         _closeButton.FlatAppearance.MouseDownBackColor = Color.FromArgb(140, 30, 30);
         _closeButton.Click += (s, e) => Close();
 
+        // Video Tutorial link
+        var videoLink = new Label
+        {
+            Text = "▶ Video Tutorial",
+            ForeColor = Color.FromArgb(100, 180, 100),
+            Font = new Font("Consolas", 8f, FontStyle.Bold),
+            AutoSize = true,
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        videoLink.Location = new Point(8, (TITLE_BAR_HEIGHT - videoLink.Height) / 2);
+        videoLink.Click += (s, e) =>
+        {
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://www.youtube.com/watch?v=l-9ALe3U-Fg", UseShellExecute = true }); }
+            catch { }
+        };
+        videoLink.MouseEnter += (s, e) => videoLink.ForeColor = Color.FromArgb(150, 255, 150);
+        videoLink.MouseLeave += (s, e) => videoLink.ForeColor = Color.FromArgb(100, 180, 100);
+
         _titleBar.Controls.Add(_closeButton);
+        _titleBar.Controls.Add(videoLink);
         _titleBar.Controls.Add(_titleLabel);
 
         Controls.Add(_titleBar);
 
-        // Position title label centered
+        // Position title label centered, align video link vertically
         _titleBar.Resize += (s, e) =>
         {
-            _titleLabel.Location = new Point((_titleBar.Width - _titleLabel.Width) / 2, (TITLE_BAR_HEIGHT - _titleLabel.Height) / 2);
+            int titleY = (TITLE_BAR_HEIGHT - _titleLabel.Height) / 2;
+            _titleLabel.Location = new Point((_titleBar.Width - _titleLabel.Width) / 2, titleY);
+            videoLink.Location = new Point(8, titleY + _titleLabel.Height - videoLink.Height);
         };
     }
 
@@ -258,7 +290,8 @@ public class MainForm : Form
 
     private void MainForm_Load(object? sender, EventArgs e)
     {
-        _settingsToggle.Toggle();
+        // If you want the program to start with the control panel collapsed, uncomment this line:
+        // _settingsToggle.Toggle();
     }
 
     private void MainPanel_Resize(object? sender, EventArgs e)

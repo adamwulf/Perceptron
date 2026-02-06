@@ -29,6 +29,8 @@ public class ManualDialog : Form
         { "OperatingProcedures", "12" },
         { "MathDial", "19" },
         { "TheAlgorithm", "24" },
+        { "The1960Algorithm", "29" },
+        { "The1986Algorithm", "34" },
         { "Credits", "39" },
         { "BuildItYourself", "45" }
     };
@@ -92,42 +94,12 @@ public class ManualDialog : Form
         _closeButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(180, 40, 40);
         _closeButton.Click += (s, e) => Close();
 
-        // Video tutorial link - metal plate style, positioned to the right of title
-        var videoPanel = new Panel
-        {
-            Size = new Size(130, 22),
-            BackColor = Color.FromArgb(50, 55, 50),
-            Cursor = Cursors.Hand
-        };
-        var videoLabel = new Label
-        {
-            Text = "▶ Video Tutorial",
-            ForeColor = Color.FromArgb(100, 180, 100),
-            Font = new Font("Consolas", 8f),
-            AutoSize = false,
-            Size = new Size(130, 22),
-            TextAlign = ContentAlignment.MiddleCenter,
-            BackColor = Color.Transparent,
-            Cursor = Cursors.Hand
-        };
-        videoPanel.Controls.Add(videoLabel);
-        videoPanel.Click += VideoTutorial_Click;
-        videoLabel.Click += VideoTutorial_Click;
-        videoPanel.MouseEnter += (s, e) => { videoLabel.ForeColor = Color.FromArgb(140, 220, 140); videoPanel.BackColor = Color.FromArgb(60, 65, 60); };
-        videoPanel.MouseLeave += (s, e) => { videoLabel.ForeColor = Color.FromArgb(100, 180, 100); videoPanel.BackColor = Color.FromArgb(50, 55, 50); };
-        videoLabel.MouseEnter += (s, e) => { videoLabel.ForeColor = Color.FromArgb(140, 220, 140); videoPanel.BackColor = Color.FromArgb(60, 65, 60); };
-        videoLabel.MouseLeave += (s, e) => { videoLabel.ForeColor = Color.FromArgb(100, 180, 100); videoPanel.BackColor = Color.FromArgb(50, 55, 50); };
-
         _titleBar.Controls.Add(_closeButton);
         _titleBar.Controls.Add(_titleLabel);
-        _titleBar.Controls.Add(videoPanel);
 
         _titleBar.Resize += (s, e) =>
         {
-            _titleLabel.Location = new Point(15, (TITLE_BAR_HEIGHT - _titleLabel.Height) / 2);
-            // Position video panel to the right of center, before close button
-            videoPanel.Location = new Point(_titleBar.Width - _closeButton.Width - videoPanel.Width - 10,
-                (TITLE_BAR_HEIGHT - videoPanel.Height) / 2);
+            _titleLabel.Location = new Point((_titleBar.Width - _titleLabel.Width) / 2, (TITLE_BAR_HEIGHT - _titleLabel.Height) / 2);
         };
 
         Controls.Add(_titleBar);
@@ -259,11 +231,11 @@ public class ManualDialog : Form
         y = AddTocEntry("I.", "Introduction", "3", y, pageNumX, true, () => ShowIntroduction(), 0);
         y = AddTocEntry("II.", "Press Release", "5", y, pageNumX, true, () => ShowPressRelease(), 0);
         y = AddTocEntry("III.", "[REDACTED]", "7", y, pageNumX, false, null, 95);
-        y = AddTocEntry("IV.", "Operating Procedures", "12", y, pageNumX, true, () => ShowOperatingProcedures(), 0);
+        y = AddTocEntry("IV.", "Basic Perceptron Training", "12", y, pageNumX, true, () => ShowOperatingProcedures(), 0);
         y = AddTocEntry("V.", "Selectable Math Dial", "19", y, pageNumX, true, () => ShowMathDial(), 0);
-        y = AddTocEntry("VI.", "The Algorithm", "24", y, pageNumX, true, () => ShowAlgorithm(), 0);
-        y = AddTocEntry("VII.", "[REDACTED]", "29", y, pageNumX, false, null, 175);
-        y = AddTocEntry("VIII.", "[REDACTED]", "34", y, pageNumX, false, null, 120);  // Two redacted in a row
+        y = AddTocEntry("VI.", "The 1958 Algorithm", "24", y, pageNumX, true, () => ShowAlgorithm(), 0);
+        y = AddTocEntry("VII.", "The 1960 Algorithm", "29", y, pageNumX, true, () => ShowThe1960Algorithm(), 0);
+        y = AddTocEntry("VIII.", "The 1986 Algorithm", "34", y, pageNumX, true, () => ShowThe1986Algorithm(), 0);
         y = AddTocEntry("IX.", "Credits / About", "39", y, pageNumX, true, () => ShowCredits(), 0);
         y = AddTocEntry("X.", "Build It Yourself", "45", y, pageNumX, true, () => ShowBuildItYourself(), 0);
         y = AddTocEntry("XI.", "[REDACTED]", "51", y, pageNumX, false, null, 155);
@@ -464,7 +436,7 @@ The Navy said it would use the principle to build the first Perceptron ""thinkin
     private void ShowOperatingProcedures()
     {
         CreatePageStructure(true);
-        AddTocLinkAndTitle("III. OPERATING PROCEDURES");
+        AddTocLinkAndTitle("IV. BASIC PERCEPTRON TRAINING");
 
         string content = @"TRAINING THE PERCEPTRON: T vs J RECOGNITION
 
@@ -585,7 +557,7 @@ NOTE: All 1958 variants use the original perceptron learning rule (update only w
     private void ShowAlgorithm()
     {
         CreatePageStructure(true);
-        AddTocLinkAndTitle("V. THE ALGORITHM");
+        AddTocLinkAndTitle("VI. THE 1958 ALGORITHM");
 
         string content = "THE PERCEPTRON LEARNING RULE\n\n" +
 "The perceptron computes its output using this formula:\n\n" +
@@ -638,7 +610,148 @@ NOTE: All 1958 variants use the original perceptron learning rule (update only w
 "1957 and is guaranteed to find a solution if one exists.";
 
         AddScrollableContent(content, 75);
-        SetNavigation(() => ShowMathDial(), () => ShowCredits(), _pageNumbers["TheAlgorithm"]);
+        SetNavigation(() => ShowMathDial(), () => ShowThe1960Algorithm(), _pageNumbers["TheAlgorithm"]);
+    }
+
+    private void ShowThe1960Algorithm()
+    {
+        CreatePageStructure(true);
+        AddTocLinkAndTitle("VII. THE 1960 ALGORITHM");
+
+        string content = "THE WIDROW-HOFF LEARNING RULE\n" +
+"Also known as: The Delta Rule, LMS (Least Mean Squares)\n\n" +
+"DISCOVERERS\n\n" +
+"In 1960, Bernard Widrow and his graduate student Ted\n" +
+"Hoff at Stanford University introduced the ADALINE\n" +
+"(Adaptive Linear Neuron) and a new learning rule that\n" +
+"would prove more powerful than Rosenblatt's original\n" +
+"perceptron algorithm.\n\n" +
+"THE KEY INNOVATION: CONTINUOUS ERROR\n\n" +
+"Rosenblatt's 1958 rule asks a simple binary question:\n" +
+"\"Am I right or wrong?\" If wrong, adjust. If right,\n" +
+"do nothing.\n\n" +
+"Widrow and Hoff asked a better question: \"How wrong\n" +
+"am I?\" Their rule adjusts weights in proportion to\n" +
+"the magnitude of the error, not just its sign.\n\n" +
+"THE FORMULA\n\n" +
+"  w(t+1) = w(t) + eta x (desired - actual) x input\n\n" +
+"Where:\n" +
+"  w(t)    = current weight value\n" +
+"  eta     = learning rate (controls step size)\n" +
+"  desired = target output (+1 or -1)\n" +
+"  actual  = current computed output\n" +
+"  input   = the input value (+1 or -1)\n\n" +
+"The error term (desired - actual) is continuous. A\n" +
+"large error produces a large adjustment. A small error\n" +
+"produces a small adjustment. This is gradient descent\n" +
+"on Mean Squared Error (MSE).\n\n" +
+"HOW IT DIFFERS FROM 1958\n\n" +
+"  1958 Perceptron        1960 Widrow-Hoff\n" +
+"  ----------------       ----------------\n" +
+"  Binary error           Continuous error\n" +
+"  (wrong or right)       (how much wrong)\n" +
+"  Fixed step size        Proportional step\n" +
+"  Updates only when      Updates even when\n" +
+"  wrong                  close to correct\n" +
+"  Converges if           Minimizes MSE\n" +
+"  separable              (smoother learning)\n\n" +
+"MEAN SQUARED ERROR MINIMIZATION\n\n" +
+"The Widrow-Hoff rule performs gradient descent on the\n" +
+"MSE surface. Imagine a landscape of hills and valleys\n" +
+"where elevation represents error. The algorithm always\n" +
+"moves downhill toward the lowest point, taking steps\n" +
+"proportional to the steepness of the slope.\n\n" +
+"HISTORICAL CONTEXT\n\n" +
+"The ADALINE found immediate practical application in\n" +
+"telephone echo cancellation, where it adaptively\n" +
+"filtered echoes from long-distance calls. This was\n" +
+"one of the first commercial uses of neural networks.\n\n" +
+"Hoff later went on to co-invent the microprocessor\n" +
+"at Intel (the 4004 chip in 1971).\n\n" +
+"ON THE MATH DIAL\n\n" +
+"Position: 9 o'clock, labeled \"1960\"\n" +
+"Topology: 1-to-1 connectivity (same as classic 1958)\n" +
+"Learning: Continuous error, MSE gradient descent";
+
+        AddScrollableContent(content, 75);
+        SetNavigation(() => ShowAlgorithm(), () => ShowThe1986Algorithm(), _pageNumbers["The1960Algorithm"]);
+    }
+
+    private void ShowThe1986Algorithm()
+    {
+        CreatePageStructure(true);
+        AddTocLinkAndTitle("VIII. THE 1986 ALGORITHM");
+
+        string content = "BACKPROPAGATION\n" +
+"The algorithm that ended the first AI Winter.\n\n" +
+"DISCOVERERS\n\n" +
+"In 1986, David Rumelhart, Geoffrey Hinton, and Ronald\n" +
+"Williams published \"Learning representations by\n" +
+"back-propagating errors\" in Nature, demonstrating how\n" +
+"to train multi-layer neural networks. (Paul Werbos\n" +
+"described the mathematical foundation in his 1974 PhD\n" +
+"thesis, but it was the 1986 paper that ignited the\n" +
+"field.)\n\n" +
+"THE PROBLEM: CREDIT ASSIGNMENT\n\n" +
+"The 1958 perceptron and 1960 ADALINE are single-layer\n" +
+"networks. Their weights directly connect inputs to the\n" +
+"output, so when the output is wrong, it is obvious\n" +
+"which weights to blame.\n\n" +
+"But what if you add a HIDDEN LAYER between input and\n" +
+"output? Now the hidden weights do not directly touch\n" +
+"the output. When the network is wrong, how do you\n" +
+"know which hidden weights caused the error?\n\n" +
+"This is the credit assignment problem, and it blocked\n" +
+"progress in neural networks for nearly two decades.\n\n" +
+"THE KEY INNOVATION: THE CHAIN RULE\n\n" +
+"Backpropagation applies the chain rule of calculus to\n" +
+"propagate error backward through the network layers.\n" +
+"The error at the output tells us how to adjust the\n" +
+"output weights. Those output weight adjustments, in\n" +
+"turn, tell us how to adjust the hidden weights.\n\n" +
+"ARCHITECTURE\n\n" +
+"  INPUT LAYER --> HIDDEN LAYER --> OUTPUT\n" +
+"   x[1..N]      h[1..N] (ReLU)    y\n\n" +
+"  Forward pass:\n" +
+"    z[j] = SUM(W1[j,i] x input[i]) + bias1[j]\n" +
+"    h[j] = ReLU(z[j]) = max(0, z[j])\n" +
+"    output = SUM(W2[j] x h[j]) + bias\n\n" +
+"  Where:\n" +
+"    W1[j,i] = weight from input i to hidden node j\n" +
+"    W2[j]   = weight from hidden node j to output\n" +
+"    ReLU    = Rectified Linear Unit activation\n\n" +
+"THE BACKWARD PASS\n\n" +
+"  1. Compute output error:\n" +
+"     error = desired - actual\n\n" +
+"  2. Update output weights:\n" +
+"     W2[j] += eta x error x h[j]\n\n" +
+"  3. Propagate error to hidden layer:\n" +
+"     delta[j] = W2[j] x error x ReLU'(z[j])\n\n" +
+"  4. Update hidden weights:\n" +
+"     W1[j,i] += eta x delta[j] x input[i]\n\n" +
+"  ReLU'(z) = 1 if z > 0, else 0\n" +
+"  (The derivative is simply: was the neuron active?)\n\n" +
+"WHY IT MATTERS\n\n" +
+"Single-layer perceptrons cannot learn XOR or any\n" +
+"pattern that is not linearly separable. Minsky and\n" +
+"Papert proved this in 1969, triggering the first\n" +
+"AI Winter as funding dried up.\n\n" +
+"Backpropagation solved this by enabling multi-layer\n" +
+"networks where hidden layers can learn intermediate\n" +
+"representations. The hidden layer can discover\n" +
+"features that make the problem linearly separable\n" +
+"at the output layer.\n\n" +
+"This breakthrough eventually led to modern deep\n" +
+"learning: networks with many hidden layers trained\n" +
+"by the same fundamental algorithm.\n\n" +
+"ON THE MATH DIAL\n\n" +
+"Position: 10 o'clock, labeled \"1986\"\n" +
+"Topology: Fully connected, multi-layer (MLP)\n" +
+"Activation: ReLU in hidden layer\n" +
+"Learning: Full backpropagation through hidden layer";
+
+        AddScrollableContent(content, 75);
+        SetNavigation(() => ShowThe1960Algorithm(), () => ShowCredits(), _pageNumbers["The1986Algorithm"]);
     }
 
     private void ShowCredits()
@@ -691,13 +804,57 @@ algorithm.", 9, FontStyle.Regular);
         var author = CreateTypewriterLabel("S. Rives with full use of Claude Code AI", 9, FontStyle.Regular);
         author.Location = new Point(35, y);
         _paper.Controls.Add(author);
-        y += 25;
+        y += 30;
 
-        var github = CreateTypewriterLabel("GitHub: https://github.com/srives", 9, FontStyle.Regular);
-        github.Location = new Point(35, y);
-        _paper.Controls.Add(github);
+        var pubNote = CreateTypewriterLabel(
+@"See, ""Prediction of Atomic Ionization
+Potentials I-III Using an Artificial Neural
+Network"", Journal of Chemical Information
+and Computer Sciences, 1994, 34, 617-620,
+for which, S. Rives wrote the associated
+software.", 8, FontStyle.Regular);
+        pubNote.Location = new Point(35, y);
+        pubNote.AutoSize = true;
+        _paper.Controls.Add(pubNote);
 
-        SetNavigation(() => ShowAlgorithm(), () => ShowBuildItYourself(), _pageNumbers["Credits"]);
+        // Render journal title in italic overlay
+        var journalItalic = new Label
+        {
+            Text = "Journal of Chemical Information",
+            Font = new Font("Courier New", 8f, FontStyle.Italic),
+            ForeColor = Color.FromArgb(30, 30, 30),
+            BackColor = Color.FromArgb(242, 238, 225),
+            AutoSize = true
+        };
+        // Position over the 3rd line of pubNote (line index 2, ~26px down)
+        journalItalic.Location = new Point(40, y + 26);
+        _paper.Controls.Add(journalItalic);
+        journalItalic.BringToFront();
+
+        var journalItalic2 = new Label
+        {
+            Text = "and Computer Sciences",
+            Font = new Font("Courier New", 8f, FontStyle.Italic),
+            ForeColor = Color.FromArgb(30, 30, 30),
+            BackColor = Color.FromArgb(242, 238, 225),
+            AutoSize = true
+        };
+        journalItalic2.Location = new Point(40, y + 39);
+        _paper.Controls.Add(journalItalic2);
+        journalItalic2.BringToFront();
+
+        y += 90;
+
+        var githubLabel = CreateTypewriterLabel("GitHub: ", 9, FontStyle.Regular);
+        githubLabel.Location = new Point(35, y);
+        _paper.Controls.Add(githubLabel);
+
+        var githubLink = CreateLinkLabel("https://github.com/srives/Perceptron");
+        githubLink.Font = new Font("Courier New", 9f);
+        githubLink.Location = new Point(35 + githubLabel.Width, y + 2);
+        _paper.Controls.Add(githubLink);
+
+        SetNavigation(() => ShowThe1986Algorithm(), () => ShowBuildItYourself(), _pageNumbers["Credits"]);
     }
 
     private void ShowBuildItYourself()
@@ -726,8 +883,7 @@ c:\temp\, then feed the text from prompt.txt
 into Claude Code to recreate this program.
 
 I predict, one day, we won't share code, we
-will share prompts. And so I am starting the
-trend today.", 9, FontStyle.Regular);
+will share prompts.", 9, FontStyle.Regular);
         content.Location = new Point(35, y);
         content.AutoSize = true;
         _paper.Controls.Add(content);
@@ -788,6 +944,16 @@ trend today.", 9, FontStyle.Regular);
                 return;
             }
 
+            // Text files: show in a scrollable dialog directly from the embedded resource
+            if (filename.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+            {
+                using var reader = new StreamReader(stream);
+                string text = reader.ReadToEnd();
+                ShowTextResourceDialog(filename, text);
+                return;
+            }
+
+            // Binary files (images, etc.): extract to temp and open with default app
             string tempPath = Path.Combine(Path.GetTempPath(), filename);
             using (var fileStream = File.Create(tempPath))
             {
@@ -800,6 +966,100 @@ trend today.", 9, FontStyle.Regular);
         {
             MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+    }
+
+    private Form? _textResourceDialog;
+
+    private void ShowTextResourceDialog(string title, string text)
+    {
+        if (_textResourceDialog != null && !_textResourceDialog.IsDisposed)
+        {
+            _textResourceDialog.BringToFront();
+            return;
+        }
+
+        const int titleBarHeight = 30;
+        bool isDragging = false;
+        Point dragStart = Point.Empty;
+
+        var dlg = new Form
+        {
+            Text = title,
+            FormBorderStyle = FormBorderStyle.None,
+            BackColor = Color.FromArgb(20, 20, 20),
+            StartPosition = FormStartPosition.CenterParent,
+            Size = new Size(700, 600),
+            ShowInTaskbar = false
+        };
+        dlg.Paint += (s, e) =>
+        {
+            using var borderPen = new Pen(Color.FromArgb(60, 60, 60), 1);
+            e.Graphics.DrawRectangle(borderPen, 0, 0, dlg.Width - 1, dlg.Height - 1);
+        };
+
+        // Title bar
+        var titleBar = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = titleBarHeight,
+            BackColor = Color.FromArgb(30, 30, 30)
+        };
+        titleBar.MouseDown += (s, e) => { if (e.Button == MouseButtons.Left) { isDragging = true; dragStart = e.Location; } };
+        titleBar.MouseMove += (s, e) => { if (isDragging) { var p = titleBar.PointToScreen(e.Location); dlg.Location = new Point(p.X - dragStart.X, p.Y - dragStart.Y); } };
+        titleBar.MouseUp += (s, e) => isDragging = false;
+
+        var titleLabel = new Label
+        {
+            Text = title.ToUpper(),
+            ForeColor = Color.FromArgb(180, 180, 180),
+            Font = new Font("Consolas", 10f, FontStyle.Bold),
+            AutoSize = true,
+            BackColor = Color.Transparent
+        };
+        titleLabel.MouseDown += (s, e) => { if (e.Button == MouseButtons.Left) { isDragging = true; dragStart = new Point(e.X + titleLabel.Left, e.Y + titleLabel.Top); } };
+        titleLabel.MouseMove += (s, e) => { if (isDragging) { var p = titleLabel.PointToScreen(e.Location); dlg.Location = new Point(p.X - dragStart.X, p.Y - dragStart.Y); } };
+        titleLabel.MouseUp += (s, e) => isDragging = false;
+
+        var closeButton = new Button
+        {
+            Text = "X",
+            Size = new Size(40, titleBarHeight),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.FromArgb(30, 30, 30),
+            ForeColor = Color.FromArgb(200, 60, 60),
+            Font = new Font("Consolas", 12f, FontStyle.Bold),
+            Cursor = Cursors.Hand,
+            Dock = DockStyle.Right
+        };
+        closeButton.FlatAppearance.BorderSize = 0;
+        closeButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(180, 40, 40);
+        closeButton.Click += (s, e) => dlg.Close();
+
+        titleBar.Controls.Add(closeButton);
+        titleBar.Controls.Add(titleLabel);
+        titleBar.Resize += (s, e) =>
+        {
+            titleLabel.Location = new Point(
+                (titleBar.Width - titleLabel.Width) / 2,
+                (titleBarHeight - titleLabel.Height) / 2);
+        };
+
+        var textBox = new RichTextBox
+        {
+            Dock = DockStyle.Fill,
+            Text = text,
+            ReadOnly = true,
+            BackColor = Color.FromArgb(35, 35, 35),
+            ForeColor = Color.FromArgb(200, 200, 180),
+            Font = new Font("Courier New", 9f),
+            BorderStyle = BorderStyle.None,
+            WordWrap = true
+        };
+
+        dlg.Controls.Add(textBox);
+        dlg.Controls.Add(titleBar);
+        _textResourceDialog = dlg;
+        dlg.Show(this);
     }
 
     private Button CreatePaperButton(string text)

@@ -10,4 +10,4 @@ if %errorlevel% neq 0 (
 )
 echo.
 echo Running application...
-dotnet run --no-build
+start "" dotnet run --no-build

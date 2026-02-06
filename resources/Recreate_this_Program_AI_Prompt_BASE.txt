@@ -1,781 +1,522 @@
-I have an app I want you to build. This a model of how perceptrons work. 
-We are in the planning stage, and I want you to get the instructions. 
-
-First: Notice that the basic layout of screen parts is seen here: c:\temp\perceptrons.png. 
-
-This program has a one-to-one relation of switches to LEDs (the LEDs show switch state) to knobs/dials (the dials
-can select from range from -30 to 30), and then there is one extra knob/dial on the bottom that is a bias (not associated with any LEDs).
-The switches, the LEDs and the knbos are all shows in squre grid, each switch connects to one LED and that to one dial/knob. All of this is
-connected to an processor board that outputs to a analogy gague that goes from -100 to 100. I want you to implement a visual
-form of this, with switches, the LED outputs (showing switch state), the connected knbos/dials, and then the final output taking all the knobs as
-inputs and outpting a single microapere. Follow the instructions in the video if you are able. If you are not able, ask me and I will try to
-capture the notes somehow. Don't do any work yet, just gather up all this information, and then if you can do it, we can plan our steps.
-
-This is a perceptron. The machine shocked the world of the 1950s by learning to recognize patterns completely
-automatically. And today the algorithm it implements has become the core building block of AI systems like chat GPT. But why is this the
-atomic unit of the intelligent systems we have today? 
-
-The perceptron works by processing patterns we input using these switches, like this T shape. Switches in the up position output a
-positive voltage, and switches in the down position output a negative voltage. Each switch is connected to an indicator LED, and then to one
-of these dials.
-
-Following are the rules for the program, I took these from a transcription of https://www.youtube.com/watch?v=l-9ALe3U-Fg. Do NOT load that
-youtube video, just use the instructions I have for you here: 
-"Rotating a dial multiplies the output of the switch by the number shown on the dial. And the meter shows the result of adding the signals from
-all the dials together. Now, is there a way to configure our dials, such that the perceptron always outputs a positive signal for
-T shapes, without putting a negative value for other types of shapes, like this J shape. Note that our shapes won't be in the same position
-each time. Remarkably, it turns out that if a configuration of dials that solves our problem exists, there is a simple procedure we can
-follow that is guaranteed to find it every time. Starting with this T shape, our meter is showing a value close to zero, but we want it to be
-positive. In this case, our procedure tells us to turn all the knobs that are switched on to the right by a constant value called the learning 
-rate, and to turn all the knobs that are switched off to the left by the learning rate. Our next pattern is a J shape, so we want our machine to 
-output a negative value. However, the current dial configuration outputs a positive value. In this case, our procedure tells us to turn down all 
-the dials that are switched on and turn up all the dials that are switched off. Moving to our next pattern, a shifted J shape. Our perceptron 
-again outputs a positive value instead of the desired negative value. So we again turn down all the switches that are on and turn up all the 
-switches that are off. Arriving at our fourth and final example, the current configuration of dials outputs the correct positive value that we 
-expect for a T. In this case, our procedure tells us to leave our dials alone. Recycling back through our patterns, we see that our machine has 
-learned to correctly classify all four examples. This procedure was discovered in 1957 by the psychologist Frank Rosenblad, and is known as the 
-perceptron learning rule."
-
-I want the grid to be configurable (4x4 but user can go larger)
-Make the Grid size control be a dial, and have it go from 1 to 10. Start it off at 4, and make 1 be poiting straight up.
-And make the learning rate be adial with values from 0.1 to 5.0 with 0.1 steps. And put the word "Grid" in a metal plate
-like you have "Bias" and "Learn Rate" also in a metal plate.
-
-I want automated and manual mode "Mode: Manual" button (the user can select, make it bottom middel of the screen). Beside it, a button called 
-"Learn +" and "Learn -", put in the style of metal plates with four corner divits.
-
-In automated mode, when you user inputs something on the switches, they can press "Learn +" that will automatically adjust all the dials that
-have selected swtiches. "Learn -" will decrese the voltage by the "Training Amount/Rate" 
-Make the learning rate dial go form -30 to 30 with a step rate of .05, and with Zero pointing up.
-
-Or they can do it manually. 
-
-I also want a green LED beside the output meter. On means + voltage, Off means - voltage. 
-
-I want this to be a stand-alone Winform app in C#. 
-
-I don't want any borders or frame on the app. I want the bacground all black. I want there to be a red X in the top right
-corner to close the app. I want the app to use fixed Consoloa font throughout (to make it look 19980s text type). I want the name of the app
-"Mark 1 Perceptron Simulator by Frank Rosenblatt, Cornell, 1958" in the top center of where the main windows top bar would go 
-(but, again, I don't want you to use any of the ugly windows form default look). 
-
-If the user clicks on a dial, it is the active dial. Then if they press the up or down arrow, it will change its value by whatever 
-the step size is of that dial/knob. None of my screen elements should have any tabstops. That way when I use arrows to change the 
-values of the gauges, they are not interpreted as tab stops. 
-For ALL dials/knbos The up and down arrorws, and the left and right arrows, should not tab or move to the next control. The up and down left and right
- rrows control the knob. I don't care what you have to do to make this true, make it true. Up and right, increase the value, down and left decrease it. The
-  tab key can take the user to the next item, but the arrow keys MUST be captures and the control must use them as knob controls.
-
-You have seen the png I gave you, so you know the basic layout. You can put the switches and the LEDs together, instead of
-in different grids. You can show the LED and the switch very close so the association is obvious. The panel of knobs can be off to the right of
-that pannel. The panel of knobs has one extra knob which is a bias knob. The outputs from all the knobs don't need to be shown leading into a
-breadboard like in the perceptrons.png I gave you. I gave you that image as a guide.
-
-Make the program sizeable when the grid changes size. 
-
-Put hoover over texts explaining each button. Add a master switch to turn off all the switches with LEDs. And for the knobs, orient them so that pointing straight
-UP is 0 and is the default. And take the word off the gage you are showing (being amperes is not important). When the user
-makes the grid larger than 4x4, auto-grow the screen, and make it so that everything fits without overlap.  I need to be able to grabe the 
-edge of the window, and size it. The sizing of the main window needs enabled. Show a very small red set of diagnoal lines in the bottom right 
-corner indicating that the user can grave the bottom right corner and size the window. The "Bias" label should exist just above the Bias knob, 
-so that the number the knob is turned to, does not overlap. The green output light should only be on if the output is greater than zero.
-Put a label that explains how to set the knobs, something like, "1.Set your switches. 2. If the led is red, turn the dial by X. 3. If the led
-is off, turn the dial by -X. 4. Repeat" --  make the label look like one of those metal plates from a 1950s machines.
-
-Make the header title to "Mark I Perceptron Simulator by Frank Rosenblatt, Cornell, 1958". Replace the Reset button with a master switch that is on if
-ANY of the switches are on, and off, if all the switches are off. And when the Master Switch is On, turning it off will turn off all the LEDs. And if it
-is Off, it will turn on all the LEDs. Place the Master Switch positioned below all the other switches, similarly loctated as the bias dial is to the
-other dials. Give it a label in a steally looking metal label that says, "RESET". Also make the Label for "BIAS" have a similar metal plate.
-  
-Remove the Reset button from the page. It won't be needed. Also, the metal plate that shows the instructions, the text needs to be easier to read, so
-make the text brigher.
-
-For the Bias label. I want it to look like a metal plate. You can put it to the right of the Dial to give it room. The isntructions are on a "Metal
-Plate" (my defintion of a metal plate is what holds the instructions). Also, put the "Reset" onto a metal plate approriately sized. And put a hoover over
-text for the Grid size and the Rate input so the user can know what these are.  The metal plates that hold the word "Bias" and "Reset" need to have divits 
-on the four corners as to where the plates are attached to the machine/background. And in both cases, the plates should be on the left side of the control 
-to which they relate.
-
-And make all the buttons, "Mode: Manual" and "Learn +" and "Learn -" be metal plates like everything else
-(just clickable like the operator's manual). Move these buttons "Mode: Manual" and "Learn +" and "Learn -" to the center of middle of teh screen 
-
-Step size for when we press left, right, up down on a dial needs to be configurable. The main dials part of the perceptron engine, have step size of 0.05 (a
-very fine tune control). And in a sudued small metal plate above the switches, put a tag that says "Off = -1v, On = +1v"
-
-----------------------------------
-# Next feature is a manual
-  
-In the bottom right of the main pate, we need a manual/tutorial.  To access the manaul, the user presses the metal label that says, "Operator's Manual" 
-(again, for this metal label, put four divits on the four corners like the Bias plate). And if the user presses the plate, then you show a 
-dialog styled like our main page. Put the operator's manual button down in the bottom right, it will launch the dialog for reading pages (as follows).
-
-This dialog will hold a page. One page. The first page will have a table of contents like an old manual (use white paper with black font, and the font
-has to look like one of those old manuals that has been decalssified by the CIA (you may have to create fonts, find a font, etc). Make the background
-look like a photo copied paper. And put a watermark "Declassified" diaganal and subdued across all the manual pages.
-And on the "declassification" watermark, add smaller subtest centerend beneatht the DECLASSIFIED put "Declassified 
-in 2005 as per the 1995 Excutive Order 12958 3.4"
-  
-And the first page will have the table of contents. Multiple chapters are in this book/manual. They are:
-
-Introduction. Operating Procedures. Credit/About. Build It Yourself. 
-
-The table of contents will list these. To make it look cool, put fake chapters that have been redacted out. For each chapter do the chapter name
-and ........ Page Number (make up fake page numbers). Make sure the dots are not running past the page numbers 
-For example, this would be wrong:  "3..", "7...", "18...". just fill the gap completely between title and page number
-
-Each of these chapters is clickable (excpet the redacted ones), when clicked, bring up a page onto the dialog that 
-replaces the current view. Also, for any page selected, there will be at home, a "TOC" link at the top, to take the user back to the 
-table of contents. Add a Next Page for pages that would scroll off the bottom of the page. At the bottom center of the page dialog, 
-add <-Prev and Next-> pages, and show on the page the same fake number you got from the fake numbers in the talbe of contents.
-Use relative/dynamic positioning based on actual parent dimensions, not hardcoded pixel values. Add scroll handling for variable-length content.
-Don't magic numbers like PAPER_WIDTH = 660, instead query the real dimensions when placing controls.
-The manual dialog must be wide enough to show the fake page numbers on the table of contents. 
-
-Here are the chapters, I describe each starting with a #
-
-# Introduction Chapter Definition:
-If the user presses the Introduction chapter, it shows them this:  
-
-"In 1958, Frank Rosenblatt, a research psychologist at the Cornell Aeronautical Laboratory, introduced the Perceptron, the world's first artificial neural network capable of learning from experience. 
-
-Key Developments in 1958. 
-The Algorithm: Rosenblatt published his seminal paper, "The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain," in Psychological Review. 
-It defined the first machine learning algorithm for artificial neurons, using a weighted sum of inputs to make binary classification decisions.
-
-Initial Demonstration: Using a 5-ton IBM 704 computer, Rosenblatt demonstrated the perceptron's ability to "teach itself" to distinguish between cards marked on the left
-versus the right after just 50 trials.
-
-Public Impact: The U.S. Office of Naval Research unveiled the invention in July 1958, leading to sensational New York Times headlines that predicted the "embryo of an electronic computer" 
-would soon walk, talk, and be conscious. 
-
-The Perceptron Machine (Mark I). 
-While the 1958 demonstrations used software simulations, Rosenblatt later realized the concept in physical hardware
-
-Physical Build: The Mark I Perceptron was completed in 1960 at Cornell. Components: It featured a "camera eye" with 400 photocells (a 20x20 pixel array) and used electric motors to adjust potentiometers, which acted as the machine's "variable weights".
-
-Capabilities: It was primarily designed for image recognition, successfully learning to identify basic geometric shapes like triangles and squares."
-
---------------
-# Operating Procedures Chapter Definition
-If the user presses the Operating Procedures, give them instructions on how to do the T and J example from the dialog above
-
---------------
-# Credits/About:
-In this chapter, give credit to "Welch Labs"
-Put a link to the youtube video (https://www.youtube.com/watch?v=l-9ALe3U-Fg)
-Put a link to the original manaul: https://apps.dtic.mil/sti/tr/pdf/AD0236965.pdf
-Created by S. Rives with full use of Claude Code AI: https://github.com/srives 
-
---------------
-#Build it Yourself
-Tell the user the following:
-
-"This program was build 100% with AI through prompts as an hommage to the pioneers of Nerual Networks.
-You can take the exact same prompts I used, feed it into Claude Code, and have it build a replica of this program.
-Copy the accompanying perceptrons.png to c:\temp\, then feed the text from prompt.txt into Claude Code to recreate
-this program. I predict, one day, we won't share code, we will share prompts. And so I am starting the trend today."
-
-Give the user a button to see the perceptrons.png file (which is in resources\) 
-Give the user a notpead button to pull up the resources\prompt.txt 
-Both of these files need to lives in the same path as where this program runs so that the program can find them.
-And for the buttons on this chapter, put the buttons closer to the bottom of the dialog.
-
-Note to Claude: I want you to "suck up" and embed the files that are in the resources directory so they are build right into the program as virtual 
-files, so that when the user needs to access the prompt.txt, it comes out of the program. At build time, you create the EXE and you consume these two resoruces 
-into the build, and then when the user presses "View Rererence Image", you produce for them the image served up not from your own memory as an EXE.
-
------------------------
-That's the book feature all done.
-
-I want a descriptive metal plate across the top, just below the title bar area (snugging it real close), centered. I want it to have the math formulat for the
-perceptron. Show that it is taking the values and summing them up. Of course, make it accurate what is happening. So that the value of the final output 
-is understood by the user as to whereforth it came. Use smaller fonts as needed, and use only one line of text. and make the metal plate look like the other 
-metal plates, and do NOT make it span the whole width of the screen, just have it old the text.
-
-Add a save and a load option, where the user can save all the values they have dialed in, or they can load all the values preiviusly saved. You will adjust
-the grid size based on what the user has saved. So you may have to shrink or grow the grid as needed. And, as always, make these metal plate looking
-buttons, and put them in the bottom to the left of the operator's manual button.
-
-To be clear, when I press the "Learn +", you will go through and adjust all the dials by the
-learning amount, positive for the lights on, and negative for the lights off. And if I press "Learn -", you will go through and adjust all the dials by the
-learning amount, negative for the lights on, and postive for the lights off. If this is correct, I would like you to update our operators manual. Add a new
-chapter called, "The Alogorithm" as the chapter before the about chapter, and put this information in it. I would also like you to clarify the math (same as
-what you put on the top label on the top of the main screen, only now you can say a few more words. You will need to update the table of contents, and
-generate new fake page numbers to make all this work.  
-
-Okay, we need a debug window that runs analog to and beside the main window. If the user pressed [Debug] (another bottom button, with a metal plate design),
-then this modaless dialog pops up, that aysnchronisly knows about all the switches and all the dials. But it doesn't draw switches and dials. It draws
-instead a vertical line on the left side of the dialog, a vertial set of cricle nodes--each one standing for the different input switches in the main menu.
-And there is a 1 or a 0 feeding in from the left of these circles/nodes, rpresenting the state of the switches (1s and 0s for the switch states, and
-dynmically updating if a switch changes). Then, we have horizontal lines leaving that node, going to the right and meeting the middle layer node that
-corresponds to it (these being the dials). And these dials are represented as little circles, and they have outputs, showing the value of the output over
-the top of the line as it leaves the node. All of the middle layer lines coming from the midle layer, meet the output single output node. And, coming out of
-that output node / circle, is a line going to the final output value, showing the final number. This is very much like a three layer nerual net, only we
-have just one input and one output nodes. We also have the bias node feeding into the output. This dialog should scale and make the circles smaller as
-needed. The coloring scheme of this dialog is black background, with red input nodes being nodes receving a 1 (a positive input), and white otherwise. All
-lines are either white (for no value coming out), or light blue if a value is coming out. And the numbers should be rendered with postive numers being
-green, and negative numbers being yellow. This dialog will be sizable, and if the user sizes it, the redraw can account for space to make the circle nodes
-bigger. IF the circles are big enough, put the value of the dial in the cricle itself showing what it would output if a value was coming in to excite it.
-
-Using Visual Studio Publishing methods, make this program have a publish profile so that I can build a single EXE and release it. Have it publish to 
-c:\perceptron_release\
-
-We have solved the arrow problem on the grid controls. For this reason, you can renable the tab control, and let tab move to the next control left to right, 
-top to bottom. The space bar should enable or disable a switch.
-
-
-Put this information "The bias allows the decision boundary to shift away from the origin, which is essential for problems like AND/OR gates where the
-threshold isn't at zero" under the section on "The Algorithm". 
-
-Then add two new buttons: Add a Save button that looks like a push button with the word
-"SAVE" above it in metal plate lable. And Make another button like it, with a "LOAD" metal plate above it. I want the buttons to look like old buttons
-from likr from the 1950s. Small buttons, mechanical looking, where by the Save, the user can save all the values they have dialed in, or by load, they
-can load all the values preiviusly saved. You will adjust the grid size based on what the user has saved. So you may have to shrink or grow the grid as
-needed. And, as always, make these metal plate looking buttons, and put them in the bottom to the left of the operator's manual button.
-Change the save and Load buttons by adding faint light much like the learn button (redish). Make the "Manual" button yellow like the brain button.
-To scale the grid up and own, the Switch Control must be able to scale based on actual Width/Height.
-
-I want four triangular arrow buttons that cluster together (sort of like the four arrows on the TI-83). I want this collection of buttons to be of the
-same style as the Save and Load buttons, just triangular. I want each one to have very pale lighting effects of yellow light. And I want this cluster of
-four arrow buttons like in c:\temp\arrows.png in arrangment, but color and style like what we have already designed for Save and Load.
-Put these arrows beside the reset switch (to the right of it). These buttons, each one, moves the switch states left right up or down.
-So that if you have a T of switches set, and press the Right button, the T will shift right.
-
-
-I want you to move the "Grid Size" plate and the Grid Size Dial to the left so that they are as far from the left edge of the window as the leftmost switches above are.
-  Then I want you to create a new dial on our UI, to the right of those, with a metal plate that says, "Math", and I want it be above a dial. That dial will have values printed
-  outside the hash marks going around the dial. At the 1 o'clock position of the dial will be the value 1958 (have the hash mark have 1958 beside it). The dial will default to this
-  value/position, and it means that the math formula we are using is the 1958/1959-formula (Rosenblatt's Perceptron) -- which you already have coded. Then I want the 3 o'clock
-  position to have a hash mark of 1960, and this is going to correspond to the Widrow-Hoff Rule (aka, aka Least Means Squre/LMS, which I will define shortly for you to know about.
-  And the 7 o'clock position will have a hash mark of 1986 and will correspond to the current Multi-Layer network rule you have coded. So, What I am asking is that we use the
-  network configuration as defined on the main screen, but as for the activation function (i.e., the formulat we use on a middle layer node where it takes its inputs, does some
-  math, and outputs a signal) will do different math based on the "Math" function selected by the Math Dial. Tell me if this makes sense before you change the code. Tell me what you
-   think you are going to do, and I will judge your accuracy. Now, as to the 1960 formulat (the Widro-Hoff rule), here it is: In 1960, Bernard Widrow and Ted Hoff developed a
-  learning rule for their ADALINE (Adaptive Linear Neuron) system that differed mathematically from Frank Rosenblatt's original perceptron. The "math" used by Widrow and Hoff is
-  formally known as the Widrow-Hoff Rule, the Delta Rule, or the Least Mean Squares (LMS) algorithm. 1. The Core Update Formula The rule updates the network's weights (\(w\)) based
-  on the difference between the desired target (\(d\)) and the raw linear output (\(y\)) before any activation function is applied:\(\mathbf{w}(t+1)=\mathbf{w}(t)+\eta
-  (d(t)-y(t))\mathbf{x}(t)\)\(d(t)\): Desired output (target).\(y(t)\): Actual linear output (the dot product \(\mathbf{w}^{T}\mathbf{x}\)).\(\eta \): Learning rate (a small
-  positive constant).\(\mathbf{x}(t)\): Input vector. 2. Key Mathematical Differences While the original perceptron rule only updated weights when a classification error occurred,
-  the Widrow-Hoff rule focuses on minimizing a continuous Loss Function: Loss Function: It uses the Mean Squared Error (MSE): \(L=(d-y)^{2}\). The goal is to minimize this squared
-  difference using gradient descent.Pre-Activation Feedback: Widrow-Hoff uses the error from the linear combiner (the sum \(\sum w_{i}x_{i}\)) to adjust weights, whereas
-  Rosenblatt’s perceptron used the error from the final quantized/binary output (+1 or -1).
-  
-I hit enter accidentally. Let me resay it. I realize we don't need the multi-layer switch now that we are creating this new Math Dial. What we need is that the new dial has more
-  values than I first specified last. Let me redefine it: We still keep the hash mark "1958" at 1'oclock position, and it represents the perceptron network as originally done in
-  this software (each input swith connects to one middle layer dial/node, and all the middle layer dials/nodes connect to the one output node/guage. But now, at the 2'oclock
-  postition, there will be a hash-mark that says "1958+" (to be defined below).Then at 3 o'clock, the hash mark will be "1958m" (to be defined below). At 4oclock is the hash mark,
-  "1958/+" (see below), and 5o'clock hash is "1958/m" (see below). Next we leave the 6 and 7 and 8 o'clock hash marks with nothing (they are not hooked up to anything). Next, we go
-  to the 9 o'clock, which is now our old "1960" hash mark--also being the same 1960, Widrow-Hoff Rule (aka, Least Means Squre/LMS) rule we already defined above. Finally, at 10
-  o'cloc is our the "1986" rule which is already implemented (the multi-layer network which we already have implmented). Now let me define the new functions/behaviors for the
-  2,3,4,5 oclock setting. What happens when the 2'clock ("1958+") is selected, is as follows: This is sorta like the 1958 perceptron Mark 1, except now I want you to make it so that
-   all the inputs each connect to all the outputs, just like in the mult-layer network. HOWEVER, this is not the modern multilayer math, instead you will be using math as follows,
-  and with no back prop logic: Namley, this will use the Mark 1 Prceptron formula and alogrithm for hidden layer nodes, it will just handle multiple inputs on each of the hidden
-  nodes/dials, and the logic for each middle layer node is that each node loops through all its inputs, and sums all the values for the formula: input x dial value + bias, and
-  output that sum. This is code-named the 1958_SUM_RULE, or "1958+" (make the code have this code name in the comments with the corresponding function so I can reference it). The
-  Math Dial for 3'oclock is "1958m", and it is the same as the 1958+ except it averages all of its sums, and outputs the avergage (m stands for mean). This dial's alogrithm will be
-  called the "1958_AVG_RULE" in the code comments" or also "1958m". Next is the 4'ocloc dial position labled "1958/+" and what it does is first divide each input value by the number
-   of switches in the input array (if there are 16 total switch inputs, then the input value into a middle layer node is divided by 16). What happens then, is each middle layer node
-   takes all of its inputs, and does the formula for each input: input/num_switches * dial_weight + bias. It adds up all those values and outputs it as its result. This code named
-  the "1958_DIV_SUM_RULE" or "1958/+". Finally, the 5'oclock will be "1958/m" which will be like the "1958/+" in that it divides all of its input values by the number of
-  switches/input nodes, and does the same forumla and sums all the values, only for its output, it sendd the average (hence the "m"). this is called the "1958_DIV_AVG_RULE" or
-  "1958/m". Tell me if all of this makes sense, and if you can do it. Also tell me if this logic has been documented before. What I want, basically, is the ability to configure the
-  math in the middle layer nodes, and the ability to configure if all the inputs connect to all the middle layers, or if only one input connects to one middle layer node. I believe
-  I have achieved this definition here, I just need to know if you understand it and if you can implement it cleanly. Make the code eleogant, and refactor it if needed. But the end
-  of the day, I may add more values to the math dial (more rules), so be ready for future expansion.# MARK I PERCEPTRON SIMULATOR - COMPLETE BUILD SPECIFICATION
-# This document contains all instructions needed to recreate this application using Claude Code or similar AI.
-# Feed this entire document to Claude Code along with the reference image (perceptrons.png in c:\temp\).
+# MARK I PERCEPTRON SIMULATOR - MAIN PAGE BUILD SPECIFICATION
+# Feed this document to Claude Code along with perceptrons.png (place in c:\temp\).
+# This recreates the core perceptron simulator main page with all 7 math rules.
 
 ================================================================================
 PART 1: PROJECT OVERVIEW
 ================================================================================
 
-Build a Windows Forms desktop application in C# that faithfully recreates Frank Rosenblatt's 1958 Mark I Perceptron with an authentic vintage industrial aesthetic. The simulator serves as both an educational tool and a historical tribute to the birth of neural networks.
+Build a Windows Forms desktop application in C# that faithfully recreates Frank
+Rosenblatt's 1958 Mark I Perceptron with an authentic vintage 1950s industrial
+aesthetic. All controls are custom owner-drawn with GDI+.
 
 Target: .NET 8.0+ Windows Forms standalone application
-Font: Use Consolas throughout (fixed-width, 1980s terminal feel)
-Aesthetic: Black background, vintage industrial control panel look with metallic textures, brushed metal, and glow effects simulating backlit plastic buttons.
+Font: Consolas throughout (fixed-width terminal feel)
+Aesthetic: Black background, vintage industrial control panel with metallic
+textures, brushed metal, and glow effects simulating backlit plastic buttons.
+Reference image: c:\temp\perceptrons.png shows the target layout concept.
 
 ================================================================================
-PART 2: PERCEPTRON ALGORITHM
+PART 2: PERCEPTRON ALGORITHM (7 MATH RULES)
 ================================================================================
 
-The perceptron is a single-layer neural network that classifies binary patterns.
+The perceptron processes binary switch patterns through weighted connections.
+Switches output +1 (ON) or -1 (OFF), never 0. Weights range -30 to +30.
 
-FORMULA:
+CORE FORMULA (Classic 1958):
   OUTPUT = SUM( Switch(i) * Weight(i) ) + Bias
 
-Where:
-  - Switch(i) = +1 if ON, -1 if OFF (not 0/1!)
-  - Weight(i) = dial value from -30 to +30
-  - Bias = bias dial value from -30 to +30
-  - OUTPUT = real number (displayed on analog meter)
-
 CLASSIFICATION:
-  - Positive output = one class (e.g., "T" shape)
-  - Negative output = other class (e.g., "J" shape)
+  Positive output = one class (e.g., "T" shape)
+  Negative output = other class (e.g., "J" shape)
 
-LEARNING RULE (Perceptron Learning Algorithm):
-When pressing [Learn +] (want POSITIVE output) AND output is currently wrong:
-  - For each ON switch: weight[i] += learningRate
-  - For each OFF switch: weight[i] -= learningRate
-  - Bias += learningRate
+--- MATH RULES (selected via Math Dial) ---
 
-When pressing [Learn -] (want NEGATIVE output) AND output is currently wrong:
-  - For each ON switch: weight[i] -= learningRate
-  - For each OFF switch: weight[i] += learningRate
-  - Bias -= learningRate
+1. PERCEPTRON_CLASSIC (1 o'clock, "1958"):
+   1-to-1 connectivity: each input connects to one hidden node.
+   hidden[j] = inputs[j] * weights[j]
+   OUTPUT = SUM(hidden) + bias
+   Learning: Update only when wrong (original perceptron rule).
 
-IMPORTANT: If output is already correct sign, NO changes are made.
-All weights clamped to range [-30, +30].
+2. RULE_1958_SUM (2 o'clock, "1958+"):
+   Fully connected: ALL inputs connect to each hidden node.
+   hidden[j] = SUM_i(inputs[i] * weights[j])
+   OUTPUT = SUM(hidden) + bias
+   Learning: Same as classic (update only when wrong).
+
+3. RULE_1958_AVG (3 o'clock, "1958m"):
+   Fully connected, averaged.
+   hidden[j] = (1/N) * SUM_i(inputs[i] * weights[j])
+   OUTPUT = SUM(hidden) + bias
+
+4. RULE_1958_DIV_SUM (4 o'clock, "1958/+"):
+   Divide inputs by N first, then sum.
+   hidden[j] = SUM_i((inputs[i]/N) * weights[j])
+   OUTPUT = SUM(hidden) + bias
+
+5. RULE_1958_DIV_AVG (5 o'clock, "1958/m"):
+   Divide inputs AND average output.
+   hidden[j] = (1/N) * SUM_i((inputs[i]/N) * weights[j])
+   OUTPUT = SUM(hidden) + bias
+
+6. WIDROW_HOFF (9 o'clock, "1960"):
+   1-to-1 connectivity (same topology as classic).
+   Same calculation as classic perceptron.
+   Learning: Continuous error, MSE gradient descent.
+   w(t+1) = w(t) + eta * (desired - actual) * input
+   Uses 0.1x learning rate scaling. Updates even when "close" to correct.
+
+7. BACKPROP (10 o'clock, "1986"):
+   Full multi-layer network with learned hidden weights.
+   Uses separate HiddenWeights[inputCount, hiddenCount], HiddenBiases[],
+   OutputWeights[] arrays (not the knob weights for hidden layer).
+   Forward: z[j] = SUM(HiddenWeights[j,i] * input[i]) + HiddenBiases[j]
+            h[j] = ReLU(z[j]) = max(0, z[j])
+            output = SUM(OutputWeights[j] * h[j]) + bias
+   Backward: Backpropagation through hidden layer.
+   Uses 0.01x learning rate scaling.
+
+Positions 6, 7, 8 o'clock are empty (reserved for future expansion).
+
+--- LEARNING RULES ---
+
+1958 variants (rules 1-5): Update only when classification is WRONG.
+  Learn+ (want positive): For ON switches weight += rate; OFF switches weight -= rate; bias += rate
+  Learn- (want negative): For ON switches weight -= rate; OFF switches weight += rate; bias -= rate
+
+1960 (Widrow-Hoff): Continuous error update every time.
+  w += learningRate * 0.1 * error * input (where error = desired - actual)
+
+1986 (Backprop): Full backpropagation through hidden layer.
+  Uses learningRate * 0.01 scaling. Updates HiddenWeights, HiddenBiases,
+  OutputWeights, and output Bias.
+
+All weights clamped to [-30, +30] after every update.
+Default learning rate: 10.0.
 
 ================================================================================
 PART 3: APPLICATION STRUCTURE
 ================================================================================
 
-SOLUTION STRUCTURE:
 PerceptronSimulator/
 ├── PerceptronSimulator.csproj
 ├── Program.cs
-├── MainForm.cs
-├── ManualDialog.cs
-├── DebugDialog.cs
-├── PerceptronEngine.cs
+├── MainForm.cs              - Main window, layout, event wiring
+├── PerceptronEngine.cs      - Neural network: 7 math rules + learning
 ├── Controls/
-│   ├── SwitchControl.cs
-│   ├── KnobControl.cs
-│   ├── SettingsKnobControl.cs
-│   ├── AnalogMeterControl.cs
-│   ├── OutputLedControl.cs
-│   ├── MechanicalPushButton.cs
-│   ├── ArrowButton.cs
-│   ├── MetalLabelControl.cs
-│   ├── MetalPlateControl.cs
-│   ├── MetalPlateButton.cs
-│   ├── FormulaPlateControl.cs
-│   └── FlatNumericUpDown.cs
+│   ├── SwitchControl.cs     - Toggle switch with LED
+│   ├── KnobControl.cs       - Rotary dial (-30 to +30)
+│   ├── SettingsKnobControl.cs - Configurable range knob (grid size, rate)
+│   ├── ConfigKnob.cs        - Math dial with 7 discrete clock positions
+│   ├── MechanicalPushButton.cs - Round/square vintage push button
+│   ├── ArrowButton.cs       - Triangular d-pad button
+│   ├── AnalogMeterControl.cs - Analog gauge (-100 to +100)
+│   ├── OutputLedControl.cs  - Large green LED indicator
+│   ├── MetalLabelControl.cs - Engraved metal plate label
+│   ├── MetalPlateControl.cs - Multi-line instruction plate
+│   ├── FormulaPlateControl.cs - Dynamic formula display
+│   └── TogglePlateControl.cs - 1950s wall-plate rocker switch
 └── resources/
-    ├── perceptrons.png
-    └── prompt.txt
+    └── perceptrons.png      - Reference layout image
 
 ================================================================================
 PART 4: MAIN FORM LAYOUT
 ================================================================================
 
 WINDOW CHROME:
-- FormBorderStyle = None (custom chrome)
+- FormBorderStyle = None (custom chrome, no Windows decorations)
 - Black background
-- Custom title bar at top (30px height, dark gray #141414)
-- Title text centered: "Mark I Perceptron Simulator by Frank Rosenblatt, Cornell, 1958"
-- Red X close button in top right
-- Window is draggable by title bar
-- Window is resizable (implement WM_NCHITTEST for edge detection)
-- Small red diagonal lines in bottom-right corner indicating resize grip
-- Minimum size: 700x580
+- Custom title bar (30px, Color.FromArgb(20, 20, 20))
+- Title: "Mark I Perceptron Simulator by Frank Rosenblatt, Cornell, 1958"
+- Red X close button (top right, Consolas 12pt bold)
+- "▶ Video Tutorial" green link (top left, Color.FromArgb(100, 180, 100))
+  Opens https://www.youtube.com/watch?v=l-9ALe3U-Fg
+- Window draggable by title bar (MouseDown/Move/Up handlers)
+- Window resizable via WM_NCHITTEST edge detection (6px border)
+- Minimum size: 700x580, default: 900x680
 
-MAIN LAYOUT (three columns):
-Left Panel (Switch Panel):
-  - Contains NxN grid of SwitchControls
-  - "Off=-1v On=+1v" metal label at top (subdued)
-  - D-pad arrow buttons below switches (pale yellow glow)
+MAIN LAYOUT (three-column + bottom panel):
 
-Center Panel (Knob Panel):
-  - Contains NxN grid of KnobControls (matching switches)
-  - One extra Bias knob at bottom center
-  - "BIAS" metal label to the LEFT of bias knob
+  Left Panel (Switch Panel, ~30% width):
+    - "Off=-1v  On=+1v" subdued metal label at top
+    - NxN grid of SwitchControls
+    - D-pad arrow cluster below switches (shifts pattern up/down/left/right)
+    - Center toggle button in d-pad (cycles all switches on/off)
 
-Right Panel (Output Panel):
-  - Analog meter at top (range -100 to +100)
-  - Large output LED below meter (green when output > 0)
-  - Formula plate showing the equation
-  - Operating instructions metal plate
-  - Video Tutorial metal label link (green text, clickable)
+  Center Panel (Knob Panel, ~40% width, 50% at 8x8+):
+    - NxN grid of KnobControls (matching switches 1-to-1)
+    - One extra Bias knob below grid, centered
+    - "BIAS" metal label to LEFT of bias knob
 
-Bottom Panel (Control Panel, 120px height):
-  Layout from left to right:
-  - RESET label + Master Switch (50x90, larger than regular switches)
-  - Grid Size label + SettingsKnob (1-10, starts at 4)
-  - [centered] LEARN+ label + round button
-  - [centered] RATE label + SettingsKnob (-30 to +30, step 0.05, default 10.0, zero points up)
-  - [centered] LEARN- label + round button
-  - SAVE square button (glows green when weights dirty)
-  - LOAD square button (faint red glow)
-  - BRAIN square button (yellow glow, opens debug dialog)
-  - MANUAL square button (yellow glow, opens manual dialog)
-  - Version label in bottom right corner (e.g., "v. 2025-12-29")
+  Right Panel (Output Panel, remaining width):
+    - Analog meter at top (180x130)
+    - Large output LED below meter (green when output > 0)
+    - Formula plate showing current equation
+    - Operating instructions metal plate
+    - SETTINGS toggle (TogglePlateControl, collapses bottom panel)
+    - TELETYPE toggle (TogglePlateControl, placeholder for debug output)
+
+  Bottom Panel (Control Panel, 120px, collapsible to 25px):
+    Layout left to right:
+    - Grid Size label + SettingsKnob (1-10, default 4, MinValuePointsUp=true)
+    - Math Dial (ConfigKnob, 7 discrete positions showing year labels)
+    - [centered] LEARN+ label + round MechanicalPushButton
+    - [centered] RATE label + SettingsKnob (-30 to +30, step 0.05, default 10.0)
+    - [centered] LEARN- label + round MechanicalPushButton
+    - [right side] MAN. square button (yellow glow, placeholder)
+    - [right side] BRAIN square button (yellow glow, placeholder)
+    - [right side] MAKE square button (green glow, placeholder)
+    - [right side] RESET round button (red glow when any switch/knob non-zero)
+    - [right side] SAVE square button (placeholder)
+    - [right side] LOAD square button (placeholder)
+    - Version label bottom-right corner (subdued, e.g. "v. 2025-12-29")
+
+  Note: MAN., BRAIN, MAKE, SAVE, LOAD buttons should exist visually but
+  can be non-functional placeholders. LEARN+, LEARN-, RESET, Grid Size,
+  Math Dial, and RATE must be fully functional.
 
 ================================================================================
 PART 5: CUSTOM CONTROLS SPECIFICATIONS
 ================================================================================
 
-All controls use GDI+ for rendering with SmoothingMode.AntiAlias.
-All controls inherit from Control and use ControlStyles for double buffering.
+All controls use GDI+ with SmoothingMode.AntiAlias and double buffering.
+All inherit from Control with ControlStyles for flicker-free rendering.
 
 ----- SwitchControl -----
-Size: Default 50x80 (scalable for larger grids)
+Default: 50x80 (scalable for larger grids)
 Components:
-  - LED indicator at top (red when ON, dark when OFF)
-  - LED has glow effect when ON (alpha 40 red glow)
+  - Red LED at top (glow when ON, dark when OFF)
   - Toggle track (dark gray rounded rectangle)
-  - Toggle handle (moves up/down based on state)
-  - Toggle color: ON = Color.FromArgb(100, 100, 100), OFF = Color.FromArgb(70, 70, 70)
-  - Border brightens on hover
+  - Toggle handle (slides up=ON, down=OFF)
+  - ON color: Color.FromArgb(100, 100, 100)
+  - OFF color: Color.FromArgb(70, 70, 70)
 Behavior:
-  - Clicking toggles state
-  - Space bar toggles when focused
+  - Click or Space toggles state
   - StateChanged event
-  - Value property: +1 when ON, -1 when OFF
+  - Value: +1 when ON, -1 when OFF
 
 ----- KnobControl -----
-Size: Default 70x90 (scalable)
-Range: -30 to +30
+Default: 70x90 (scalable)
+Range: -30 to +30, Step: 0.05
 Components:
-  - Circular knob with pointer indicator
-  - Tick marks around circumference
-  - Major ticks at -30, 0, +30
-  - Value display below knob
-  - Metallic gradient (dark gray tones)
-  - Subtle glow/highlight at top
-Behavior:
-  - Click to select (becomes "active" knob)
-  - Arrow keys change value when active
-  - Mouse drag rotates knob
-  - Step size: 0.05 (fine control)
+  - Circular knob with metallic gradient
+  - Pointer indicator line
+  - Tick marks (major at -30, 0, +30)
+  - Value display below knob (format "0.00")
   - Zero points straight UP
+Behavior:
+  - Click to select (becomes active knob)
+  - Arrow keys change value when active (arrows must NOT tab between controls)
+  - Mouse drag rotates knob
+  - Mouse wheel changes value
   - ValueChanged event
 
 ----- SettingsKnobControl -----
-Similar to KnobControl but with configurable range.
-Properties:
-  - MinValue, MaxValue, Step
-  - TickValues, MajorTickValues
-  - MinValuePointsUp (if true, min value points up; if false and symmetric range, zero points up)
-  - ValueFormat (e.g., "0", "0.00")
+Configurable-range variant of KnobControl.
+Properties: MinValue, MaxValue, Step, TickValues, MajorTickValues,
+  MinValuePointsUp, ValueFormat
+Special: BelowMinimumAttempted event (fires when user drags below min)
 Used for: Grid Size (1-10), Learning Rate (-30 to +30)
+Features auto-repeat timer for smooth keyboard adjustment (KnobClick).
+
+----- ConfigKnob (Math Dial) -----
+Discrete-position rotary dial for selecting math rules.
+Size: 120x78
+Positions (clock face):
+  1 o'clock: "1958" (PERCEPTRON_CLASSIC) - default
+  2 o'clock: "1958+" (RULE_1958_SUM)
+  3 o'clock: "1958m" (RULE_1958_AVG)
+  4 o'clock: "1958/+" (RULE_1958_DIV_SUM)
+  5 o'clock: "1958/m" (RULE_1958_DIV_AVG)
+  6-8 o'clock: empty (show small dots)
+  9 o'clock: "1960" (WIDROW_HOFF)
+  10 o'clock: "1986" (BACKPROP)
+Contains MathRule enum used by PerceptronEngine.
+Behavior: Click+drag, arrow keys, mouse wheel to switch positions.
+Event: RuleChanged fires when position changes.
+Labels rendered in Consolas 7pt around the dial circumference.
+Active position tick is brighter; inactive ticks are dimmer.
 
 ----- AnalogMeterControl -----
-Size: 180x130
-Range: -100 to +100
-Components:
-  - Circular arc gauge
-  - Needle that rotates based on value
-  - Graduation marks
-  - Metallic bezel around edge
-  - Dark face with light markings
+Size: 180x130, Range: -100 to +100
+  - Circular arc gauge with graduation marks
+  - Animated needle (16ms timer for smooth movement)
+  - Metallic bezel, dark face, light markings
+  - No unit label on face
 
 ----- OutputLedControl -----
-Large LED indicator
-Components:
-  - Circular LED (green when on, dark when off)
-  - Glow effect when ON using PathGradientBrush
-  - "OUTPUT" label below
+Large green LED with PathGradientBrush glow effect when ON.
+"OUTPUT" label below.
 
 ----- MechanicalPushButton -----
-Two variants: IsSquare = true (rectangular) or IsSquare = false (round)
-Size: Approximately 50x55
+Two variants: IsSquare (rectangular) or round (circular).
+Size: ~45-50x55
 Components:
-  - Metal plate label above button with text
-  - Four corner divots (screw holes) on label plate
-  - Button with recessed housing (dark)
-  - Button bezel (gradient)
-  - Button face (gradient, darker when pressed)
-  - Glow effect inside button using PathGradientBrush
-Glow Colors:
-  - BRAIN, MANUAL: Yellow glow Color.FromArgb(255, 220, 80)
-  - SAVE: Conditional - green when weights dirty, none otherwise
+  - Metal plate label above with text and corner screw divots
+  - Recessed housing, bezel gradient, button face gradient
+  - Glow effect using PathGradientBrush (color varies by button)
+  - Visual press animation on mouse down
+Glow colors:
+  - BRAIN, MAN.: Yellow Color.FromArgb(255, 220, 80)
+  - MAKE: Green Color.FromArgb(100, 180, 100)
+  - SAVE: Green only when weights dirty, else none
   - LOAD: Faint red Color.FromArgb(200, 80, 60)
-  - LEARN+: Conditional - green when any switch ON, none otherwise
-  - LEARN-: Conditional - yellow when any switch ON, none otherwise
-Behavior:
-  - Visual press state on mouse down
-  - ButtonClick event on mouse up
+  - LEARN+: Green when any switch ON AND output <= 0
+  - LEARN-: Yellow when any switch ON AND output > 0
+  - RESET: Red when any switch ON or any knob non-zero
+Event: ButtonClick
 
 ----- ArrowButton -----
-Triangular directional buttons (D-pad style)
-Directions: Up, Down, Left, Right
-Size: Up/Down = 40x16, Left/Right = 16x40
-Components:
-  - Triangular shape pointing in direction
-  - Pale yellow glow effect
-  - Metallic gradient
-Behavior:
-  - Clicking shifts the switch pattern in that direction
-  - Patterns shift and wrap out (bits that shift off disappear)
+Triangular d-pad buttons. Directions: Up, Down, Left, Right.
+Up/Down: 40x16, Left/Right: 16x40
+Pale yellow glow Color.FromArgb(255, 220, 80).
+Clicking shifts entire switch pattern in that direction.
+Bits that shift off the edge disappear (no wrap).
 
 ----- MetalLabelControl -----
-Metal plate with engraved text
-Components:
-  - Linear gradient background (dark greens/grays)
-  - Brushed texture (faint horizontal lines)
-  - Beveled edges (light top, dark bottom)
-  - Four corner screws/divots
-  - Engraved text (shadow + light text)
-Properties:
-  - LabelText: The text to display
-  - Subdued: When true, uses more muted colors
-  - CustomTextColor: Optional override for text color (used for video link = green)
+Engraved metal plate with text.
+Gradient: Color.FromArgb(70,75,70) to Color.FromArgb(50,55,50)
+Four corner screw divots. Beveled edges.
+Text: Color.FromArgb(130,135,130), shadow Color.FromArgb(30,35,30)
+Properties: LabelText, Subdued (muted colors), CustomTextColor
 
 ----- MetalPlateControl -----
-Larger instruction plate for multi-line text
-Components:
-  - Similar metallic styling to MetalLabelControl
-  - Supports multiple lines of text (InstructionLines array)
-  - Text appears engraved
+Larger instruction plate, same metallic styling.
+Property: InstructionLines (string array for multi-line text).
 
 ----- FormulaPlateControl -----
-Displays the perceptron formula
-Shows: "Output = Σ(Switch × Weight) + Bias"
+Dynamic formula display plate. Updates text based on active math rule.
+Shows two lines: "OUTPUT =" and the formula for the selected rule.
+  PERCEPTRON_CLASSIC: "SUM(Switch x Weight) + Bias"
+  RULE_1958_SUM: "SUM(all Switch x Weight) + Bias"
+  RULE_1958_AVG: "AVG(all Switch x Weight) + Bias"
+  RULE_1958_DIV_SUM: "SUM(Switch/N x Weight) + Bias"
+  RULE_1958_DIV_AVG: "AVG(Switch/N x Weight) + Bias"
+  WIDROW_HOFF: "SUM(Switch x Weight) + Bias"
+  BACKPROP: "ReLU(W1*x + b1) -> W2*h + b2"
+
+----- TogglePlateControl -----
+1950s wall-mount style rocker switch on a metal plate.
+Default size: 50x75
+Properties: LabelText (rendered vertically), IsToggled, ActiveColor,
+  InactiveColor
+Components:
+  - Rounded rectangle metal plate with dark metallic gradient
+  - Two mounting divots (top and bottom, centered)
+  - Recessed slot with shadow for 3D depth
+  - Rocker paddle that moves up (toggled) or down (not toggled)
+  - Vertical text engraved on plate
+Event: ToggleChanged
+Used for: SETTINGS (collapses control panel), TELETYPE (placeholder)
 
 ================================================================================
-PART 6: MANUAL DIALOG
+PART 6: DYNAMIC SCALING
 ================================================================================
 
-Modal dialog with custom chrome (same style as main form)
-Size: 620x750
-Contains: PaperPanel with aged paper texture
+When grid size changes (1-10), switches and knobs scale down for larger grids.
 
-PAPER STYLING:
-  - Background: Color.FromArgb(242, 238, 225) (aged paper)
-  - Random noise dots for texture (seeded random for consistency)
-  - Diagonal "DECLASSIFIED" watermark (red-brown, alpha ~40)
-  - Subtext under watermark: "Declassified in 2005 as per the 1995 Executive Order 12958 3.4"
-  - Typewriter font: "Courier New"
+Switch scaling (7x7 and larger):
+  width = Math.Max(28, 50 - (gridSize - 6) * 7)
+  height = Math.Max(38, 80 - (gridSize - 6) * 12)
 
-TABLE OF CONTENTS (First Page):
-Title: "MARK I PERCEPTRON OPERATOR'S MANUAL"
-Chapters (with fake page numbers and dot leaders):
-  I.    Introduction........................3
-  II.   Press Release.......................5
-  III.  [REDACTED].........................7
-  IV.   Operating Procedures...............12
-  V.    [REDACTED]........................18
-  VI.   The Algorithm......................24
-  VII.  [REDACTED]........................29
-  VIII. [REDACTED]........................34
-  IX.   Credits / About....................39
-  X.    Build It Yourself..................45
-  XI.   [REDACTED]........................51
+Knob scaling (7x7 and larger):
+  width = Math.Max(45, 70 - (gridSize - 6) * 8)
+  height = Math.Max(58, 90 - (gridSize - 6) * 10)
 
-Clickable chapters open their content pages.
-Redacted entries show black bars (varying widths for authenticity).
-One redaction shows a partial letter peeking out.
+At 8x8+: Knob panel gets 50% width (up from 40%). Knobs shift right
+by half a knob width for better fit.
 
-NAVIGATION:
-  - "<- Prev" and "Next ->" links at bottom
-  - "[TABLE OF CONTENTS]" link at top of each chapter page
-  - Page number displayed at bottom center
-
-CHAPTER CONTENT:
-
-I. Introduction:
-  - History of 1958 perceptron
-  - Frank Rosenblatt at Cornell
-  - IBM 704 demonstration
-  - NY Times headlines
-  - Mark I machine description (400 photocells, motor-adjusted potentiometers)
-
-II. Press Release:
-  - Full text of July 13, 1958 New York Times article
-  - Navy demonstration description
-  - Quotes from Dr. Rosenblatt
-  - Predictions about future capabilities
-
-III. Operating Procedures:
-  - Step-by-step T vs J training example
-  - How to use Learn+ and Learn- buttons
-  - Reset switch usage
-
-V. The Algorithm:
-  - Formula explanation
-  - Learning rule details
-  - When to press each button (table format)
-  - Role of bias explanation
-
-VII. Credits / About:
-  - Acknowledgment of Welch Labs
-  - Link to YouTube video
-  - Link to original manual PDF
-  - Created by line with GitHub
-
-IX. Build It Yourself:
-  - Explanation that program was built with AI
-  - "View Reference Image" button (extracts perceptrons.png from resources)
-  - "View Prompts" button (extracts prompt.txt from resources)
+Window auto-grows to fit grid content (AutoGrowWindow method).
+Prevents going off-screen by repositioning if needed.
 
 ================================================================================
-PART 7: DEBUG DIALOG (BRAIN VISUALIZATION)
+PART 7: LINEAR MODE (EASTER EGG)
 ================================================================================
 
-Modeless dialog that shows neural network diagram
-Updates in real-time as switches/weights change
+When at grid size 1 and the user drags the knob further down:
+  - BelowMinimumAttempted event fires
+  - Enter linear mode: _isLinearMode = true, _linearNodeCount = 2
+  - Each subsequent downward drag increments _linearNodeCount (max 25)
+  - Nodes wrap at 5 per row (e.g., 7 nodes = row of 5 + row of 2)
+  - Allows testing non-square node counts (2, 3, 4... 25)
 
-LAYOUT:
-  - Left column: Input nodes (one per switch)
-  - Middle column: Weight nodes (one per dial)
-  - Right: Single output node
-  - Bias node feeding into output
-  - Lines connecting nodes show data flow
-
-COLORING:
-  - Background: Black
-  - Input nodes: Red if receiving 1, White otherwise
-  - Lines: White if no signal, Light blue if carrying value
-  - Numbers: Green for positive, Yellow for negative
-  - If nodes large enough, show dial value inside
-
-SCALING:
-  - Dialog is resizable
-  - Nodes scale with available space
-  - Smaller grids = larger nodes
+When user drags grid size back up from linear mode:
+  - Exit linear mode, revert to normal NxN grid
 
 ================================================================================
-PART 8: DYNAMIC SCALING
+PART 8: CONTROL PANEL ANIMATION
 ================================================================================
 
-When grid size changes (1-10):
-  - Switches and knobs scale down for larger grids (7x7+)
-  - Formula for switch size at 7+: Math.Max(28, 50 - (gridSize - 6) * 7) width
-  - Formula for knob size at 7+: Math.Max(45, 70 - (gridSize - 6) * 8) width
-  - Window auto-grows to fit grid
-  - At 8x8+, shift knob panel slightly right for better fit
-  - At 8x8+, reduce output panel width
+The SETTINGS toggle (TogglePlateControl) collapses/expands the bottom panel.
+  - Expanded height: 120px
+  - Collapsed height: 25px
+  - Animation: 16ms timer (~60fps), 8px per step
+  - Dashed fold line drawn during collapse animation
+  - Controls hidden when collapsed, shown when expanded
+  - Form height adjusts with panel (shrinks/grows together)
 
 ================================================================================
-PART 9: SAVE/LOAD FUNCTIONALITY
+PART 9: EVENT WIRING
 ================================================================================
 
-File format: JSON with .pcn extension
-Saved data:
-  {
-    "GridSize": 4,
-    "Weights": [array of doubles],
-    "Bias": 0.0,
-    "LearningRate": 10.0
-  }
-
-On load: Resize grid if needed, then apply weights.
-Track "dirty" state - Save button glows green when weights modified since last save.
+Switch toggled → UpdateOutput() → recalculate, update meter/LED/debug
+Knob changed → engine.SetWeight() → UpdateOutput()
+Bias knob → engine.Bias → UpdateOutput()
+Grid size knob → engine.Resize() → CreateGrid() → AutoGrow → UpdateOutput()
+Math dial → engine.MathRule → UpdateFormulaPlate() → UpdateOutput()
+Learn+ click → engine.Learn(inputs, true) → sync knobs → UpdateOutput()
+Learn- click → engine.Learn(inputs, false) → sync knobs → UpdateOutput()
+Reset click → all switches OFF, all knobs to 0, bias to 0
+Arrow click → ShiftPattern(dx, dy) → move switch pattern → UpdateOutput()
 
 ================================================================================
-PART 10: EMBEDDED RESOURCES
-================================================================================
-
-Embed these files as resources in the assembly:
-  - resources/perceptrons.png (reference image showing target UI)
-  - resources/prompt.txt (this prompt file)
-
-Resource naming: "PerceptronSimulator.resources.{filename}"
-
-"Build It Yourself" chapter extracts these to temp folder and opens them.
-
-================================================================================
-PART 11: VISUAL DETAILS AND COLORS
+PART 10: VISUAL DETAILS AND COLORS
 ================================================================================
 
 MAIN COLORS:
-  - Background: Black (#000000)
-  - Title bar: #141414
-  - Panel backgrounds: #0F0F0F
-  - Control panel: #141414
+  Background: Black (#000000)
+  Title bar: Color.FromArgb(20, 20, 20)
+  Panel backgrounds: Color.FromArgb(15, 15, 15)
+  Control panel: Color.FromArgb(20, 20, 20)
 
 METAL PLATE COLORS:
-  - Gradient top: Color.FromArgb(70, 75, 70)
-  - Gradient bottom: Color.FromArgb(50, 55, 50)
-  - Border: Color.FromArgb(40, 45, 40)
-  - Screw holes: Color.FromArgb(25, 30, 25)
-  - Text shadow: Color.FromArgb(30, 35, 30)
-  - Text: Color.FromArgb(130, 135, 130)
-  - Subdued text: Color.FromArgb(85, 90, 85)
+  Gradient top: Color.FromArgb(70, 75, 70)
+  Gradient bottom: Color.FromArgb(50, 55, 50)
+  Text: Color.FromArgb(130, 135, 130)
+  Subdued text: Color.FromArgb(85, 90, 85)
+  Screw divots: Color.FromArgb(25, 30, 25)
 
-BUTTON COLORS:
-  - Housing: #0F0F0F
-  - Bezel gradient: #464B46 to #232823
-  - Face normal: #373737 to #232323
-  - Face hover: #464646 to #323232
-  - Face pressed: #282828 to #191919
-
-GLOW EFFECTS:
-  - Use PathGradientBrush for radial glow
-  - Center alpha: 60-100 depending on state
-  - Edge alpha: 10
-  - Center offset slightly down-left for natural look
-  - Add secondary highlight spot
+BUTTON GLOW EFFECTS:
+  Use PathGradientBrush for radial glow
+  Center alpha: 60-100 depending on state
+  Edge alpha: 10
+  Center offset slightly down-left for natural backlit look
 
 LED COLORS:
-  - ON: Color.FromArgb(255, 60, 60) with glow
-  - OFF: Color.FromArgb(60, 20, 20)
-  - Output LED ON: Green with glow
-  - Output LED OFF: Dark
+  Switch LED ON: Color.FromArgb(255, 60, 60) with alpha-40 glow
+  Switch LED OFF: Color.FromArgb(60, 20, 20)
+  Output LED ON: Green with PathGradientBrush glow
+  Output LED OFF: Dark
+
+TOGGLE SWITCH COLORS:
+  ON handle: Color.FromArgb(100, 100, 100)
+  OFF handle: Color.FromArgb(70, 70, 70)
 
 ================================================================================
-PART 12: TOOLTIPS
+PART 11: TOOLTIPS
 ================================================================================
 
-All major controls have hover tooltips:
-  - Grid Size: "Number of switches/knobs per row and column (NxN grid)"
-  - Learning Rate: "How much to adjust dial weights when learning (higher = faster learning)"
-  - BIAS label: "The bias allows the decision boundary to shift away from the origin..."
-  - Arrow buttons: "Shift pattern up/down/left/right"
-  - Learn buttons: Explain what they do
-  - Save/Load: "Save/Load current weights to/from file"
-  - Brain: "Show neural network visualization"
+All major controls have dark-themed hover tooltips:
+  ToolTip: OwnerDraw=true, BackColor=FromArgb(35,35,35),
+           ForeColor=FromArgb(200,200,180)
 
-Tooltip styling: Dark background, light text, custom drawn.
+Tooltip text:
+  Grid Size: "Number of switches/knobs per row and column (NxN grid)"
+  Learning Rate: "How much to adjust dial weights when learning"
+  BIAS: "The bias allows the decision boundary to shift away from the origin,
+         essential for problems like AND/OR gates where threshold isn't zero"
+  Arrow buttons: "Shift pattern up/down/left/right"
+  Learn+: "Train: adjust weights so current pattern outputs POSITIVE"
+  Learn-: "Train: adjust weights so current pattern outputs NEGATIVE"
+  Math dial: "1958: Classic perceptron / 1958+/m: Extended variants /
+              1960: Widrow-Hoff LMS / 1986: Backprop MLP"
 
 ================================================================================
-PART 13: KEYBOARD AND MOUSE INTERACTION
+PART 12: KEYBOARD AND MOUSE INTERACTION
 ================================================================================
 
 KNOB INTERACTION:
-  - Click a knob to make it "active"
-  - Arrow keys (up/down/left/right) change active knob value
-  - Arrow keys should NOT tab between controls (override PreProcessMessage)
+  - Click to select (makes it the "active" knob)
+  - Arrow keys change active knob value by step
+  - CRITICAL: Arrow keys must NOT tab between controls
+    (override PreProcessMessage to capture arrow keys)
   - Tab key moves between controls normally
+  - Mouse drag rotates knob (vertical drag = value change)
+  - Mouse wheel changes value
 
 SWITCH INTERACTION:
-  - Click toggles switch
+  - Click toggles switch state
   - Space bar toggles focused switch
 
-MASTER SWITCH (RESET):
-  - Shows ON if ANY switch is on
-  - Toggling sets ALL switches to that state
+RESET BUTTON:
+  - Turns OFF all switches and zeroes all knobs and bias
 
 PATTERN SHIFT (D-PAD):
-  - Clicking arrow button shifts entire pattern in that direction
-  - Bits that shift out disappear (no wrap)
+  - Arrow buttons shift entire switch pattern in that direction
+  - Bits that shift off edge disappear (no wrap)
+  - Works in both grid mode and linear mode (5-column wrap)
+
+CENTER TOGGLE (D-PAD CENTER):
+  - Cycles: Off → All ON (yellow) → All OFF → repeat
+  - If some switches are on, turns all on first
 
 ================================================================================
-PART 14: PUBLISH PROFILE
+PART 13: PERCEPTRON ENGINE
 ================================================================================
 
-Create publish profile for single-file EXE deployment:
-  - Framework-dependent or self-contained
-  - Single file
-  - Output to c:\perceptron_release\
-  - Include embedded resources
+PerceptronEngine class manages all neural network state and computation.
+
+Properties:
+  GridSize, Weights[] (double), Bias (double), LearningRate (double),
+  MathRule (ConfigKnob.MathRule),
+  HiddenWeights[,] (for backprop), HiddenBiases[] (for backprop),
+  OutputWeights[] (for backprop), HiddenOutputs[] (cached activations),
+  IsFullyConnected (bool), UsesBackprop (bool)
+
+Key methods:
+  CalculateOutput(int[] inputs) → dispatches to correct math rule
+  Learn(int[] inputs, bool desiredPositive) → dispatches to correct learning
+  Resize(int newNodeCount) → rebuilds all weight arrays
+  ResetWeights() → zeroes everything
+  SetWeight(int index, double value) → clamp to [-30, 30]
+
+Engine state syncs bidirectionally with UI knobs:
+  Knob change → engine.SetWeight()
+  Learn button → engine updates weights → knobs sync from engine
 
 ================================================================================
-PART 15: SPECIFIC IMPLEMENTATION NOTES
+PART 14: IMPLEMENTATION NOTES
 ================================================================================
 
-1. GraphicsExtensions: Create extension methods FillRoundedRectangle and DrawRoundedRectangle for Graphics class.
+1. Use extension methods FillRoundedRectangle / DrawRoundedRectangle for
+   Graphics (create a static GraphicsExtensions class).
 
-2. Main form resize: Use WndProc and WM_NCHITTEST to detect edge hovering for resize.
+2. Main form resize: WndProc intercepts WM_NCHITTEST (0x84) and returns
+   HTLEFT/HTRIGHT/HTTOP/HTBOTTOM/corner codes for edge resize.
 
 3. Grid Size knob: MinValuePointsUp = true (1 points up, increases clockwise)
 
-4. Learning Rate knob: MinValuePointsUp = false (0 points up for symmetric -30 to +30 range)
+4. Learning Rate knob: MinValuePointsUp = false (0 points up for symmetric
+   -30 to +30 range). Default value is 10.0.
 
-5. Learn button glow: Only show glow when at least one switch is ON.
+5. Switches output +1 or -1, never 0.
 
-6. Save button glow: Only show green glow when _weightsDirty flag is true.
+6. Meter output clamped to [-100, +100] for display. LED on if output > 0.
 
-7. Video Tutorial: Use MetalLabelControl with CustomTextColor = Color.FromArgb(100, 180, 100) for green link text.
+7. Control panel Resize event triggers CenterActionButtons() to reposition
+   all bottom-panel controls dynamically.
 
-8. Manual chapters use Roman numerals (I, II, III, IV, V, VI, VII, VIII, IX, X, XI).
+8. Formula plate updates whenever math dial changes position.
 
-9. Default learning rate is 10.0, not 1.0.
+9. All controls should have no tab stops for arrow keys. Override
+   PreProcessMessage in KnobControl and SettingsKnobControl to capture
+   arrow keys and prevent focus movement.
 
-10. Switches output +1 or -1, never 0.
+10. The ConfigKnob (Math Dial) positions use clock-hour mapping:
+    Position 0 → 1 o'clock (30°), Position 1 → 2 o'clock (60°), etc.
+    Angle formula: hourAngle = position_hour * 30° (from 12 o'clock)
+
+================================================================================
+PART 15: PUBLISH PROFILE
+================================================================================
+
+Create a publish profile for single-file EXE:
+  - Output to c:\perceptron_release\
+  - Self-contained or framework-dependent
+  - Single file
+
+Also create a publish.bat that runs:
+  dotnet publish -p:PublishProfile=SingleFileRelease
 
 ================================================================================
 END OF SPECIFICATION
@@ -785,569 +526,12 @@ To build this application:
 1. Place perceptrons.png in c:\temp\ as reference
 2. Feed this entire document to Claude Code
 3. Let Claude create the project structure and implement each component
-4. Test with T vs J pattern recognition
+4. Test with T vs J pattern recognition on a 4x4 grid
+5. Verify Math Dial switches between all 7 rules
+6. Verify linear mode easter egg (drag grid size below 1)
 
-This program demonstrates that complex, polished desktop applications can be created through natural language prompts - "executable English."
+This program demonstrates that complex, polished desktop applications can be
+created through natural language prompts - "executable English."
 
 Created by S. Rives using Claude Code AI.
 https://github.com/srives
-# MARK I PERCEPTRON SIMULATOR - COMPLETE BUILD SPECIFICATION V2
-# ELECTRICALLY VALIDATED & PRODUCTION READY
-# This document contains all instructions to recreate this application with full circuit validation.
-# Feed this to Claude Code along with perceptrons.png reference image.
-
-================================================================================
-PART 1: PROJECT OVERVIEW & VALIDATION REQUIREMENTS
-================================================================================
-
-Build a Windows Forms desktop application in C# that faithfully recreates Frank Rosenblatt's
-1958 Mark I Perceptron with vintage industrial aesthetic AND electrically-accurate hardware
-build documentation.
-
-**CRITICAL REQUIREMENT**: This is not just a simulator - it's a circuit layout engine that
-generates BUILDABLE, ELECTRICALLY-CORRECT hardware designs. The breadboard layouts must
-represent real circuits that will function when built.
-
-Target: .NET 8.0+ Windows Forms
-Aesthetic: 1950s industrial control panel with vintage teletype debug output
-Circuit Validation: ALL circuits must be electrically validated against electronics principles
-
-**Circuit Validation Checklist (see CIRCUIT_AUDIT.md):**
-- ✅ Schematic must be electrically correct (inverting summing amplifier)
-- ✅ Breadboard must match schematic exactly
-- ✅ KiCad export must include complete netlist
-- ✅ All connections must be traceable and correct
-- ✅ Build must produce working perceptron
-
-================================================================================
-PART 2: PERCEPTRON AS ANALOG CIRCUIT (ELECTRICAL FOUNDATION)
-================================================================================
-
-The perceptron is implemented as an INVERTING SUMMING AMPLIFIER using an LM358 op-amp.
-
-**MATHEMATICAL OPERATION:**
-```
-OUTPUT = -Rf * Σ(INPUT[i] / Rin[i])
-       = -Rf * Σ(INPUT[i] * weight[i] / Rf)
-       = -Σ(INPUT[i] * weight[i])
-```
-
-Where: Rin[i] = Rf / |weight[i]|
-
-**CIRCUIT TOPOLOGY (Required Components):**
-
-1. **Input Stage** (per input):
-   - SPDT switch: Selects +5V or GND
-   - Input resistor Rin: Value = 10kΩ / |weight|
-   - Positive weights require SWAPPED switch wiring (to compensate for op-amp inversion)
-
-2. **Summing Junction**:
-   - All input resistors connect to one node
-   - This node connects to op-amp Pin 2 (inverting input)
-
-3. **Op-Amp (LM358 Section A - Inverting Summer)**:
-   - Pin 2 (IN-): Summing junction
-   - Pin 3 (IN+): Ground or virtual ground (2.5V for single supply)
-   - Pin 1 (OUT): Output
-   - Pin 8 (V+): +5V power
-   - Pin 4 (GND): Ground
-   - Gain = -Rf (negative due to inverting configuration)
-
-4. **Feedback Resistor**:
-   - Rf = 10kΩ (reference resistor)
-   - Connects Pin 1 (output) back to Pin 2 (inverting input)
-   - Sets closed-loop gain
-
-5. **Output Stage**:
-   - Current limiting resistor (470Ω)
-   - LED (green, 5mm)
-   - Lights when output is positive
-
-6. **Power Supply**:
-   - 9V battery
-   - LM7805 voltage regulator (+5V output)
-   - Decoupling capacitors (10µF, 0.1µF)
-
-**FORMULA VERIFICATION:**
-With switch representing +1 (ON) or -1 (OFF):
-```
-Vout = -Rf * Σ(Switch[i] * |weight[i]| / Rf)
-     = -Σ(Switch[i] * |weight[i]|)
-```
-With swapped wiring for positive weights, effective input sign flips, producing:
-```
-OUTPUT = -Σ(Switch[i] * weight[i])
-```
-
-================================================================================
-PART 3: APPLICATION STRUCTURE (UPDATED)
-================================================================================
-
-SOLUTION STRUCTURE:
-PerceptronSimulator/
-├── PerceptronSimulator.csproj
-├── Program.cs
-├── MainForm.cs (~1,680 LOC)
-├── ManualDialog.cs (~930 LOC)
-├── DebugDialog.cs (~650 LOC)
-├── PrintSchematicDialog.cs (~630 LOC) - Circuit schematic + KiCad export
-├── POCBreadboardDialog.cs (~1,465 LOC) - Hole-based breadboard
-├── BOMDialog.cs (~370 LOC)
-├── PartsDatabase.cs (~320 LOC)
-├── BreadboardModel.cs (~130 LOC) - Electrical connectivity
-├── KiCadExporter.cs (~230 LOC) - Complete netlist generation
-├── PrinterDialog.cs (~130 LOC) - Vintage teletype debug
-├── PerceptronEngine.cs (~480 LOC)
-├── Controls/ (13 custom controls, ~2,600 LOC)
-│   ├── SwitchControl.cs
-│   ├── KnobControl.cs
-│   ├── SettingsKnobControl.cs
-│   ├── ConfigKnob.cs (Math dial)
-│   ├── AnalogMeterControl.cs
-│   ├── OutputLedControl.cs
-│   ├── MechanicalPushButton.cs
-│   ├── ArrowButton.cs
-│   ├── MetalLabelControl.cs
-│   ├── MetalPlateControl.cs
-│   ├── MetalPlateButton.cs
-│   ├── FormulaPlateControl.cs
-│   └── FlatNumericUpDown.cs
-├── resources/
-│   ├── perceptrons.png
-│   ├── prompt.txt
-│   ├── complete_prompt.txt
-│   └── complete_prompt2.txt (this file)
-└── CIRCUIT_AUDIT.md - Complete electrical validation report
-
-Total: ~9,615 LOC, electrically validated, 0 warnings, 0 errors
-
-================================================================================
-PART 4: HARDWARE BUILD DIALOGS (CRITICAL - ELECTRICALLY ACCURATE)
-================================================================================
-
-**PrintSchematicDialog.cs - Professional Circuit Schematic**
-
-Purpose: Generate electrically-correct circuit schematic matching the perceptron algorithm.
-
-**Requirements:**
-- Show complete inverting summing amplifier circuit
-- All components labeled with reference designators (R1, R2, U1, etc.)
-- All connections drawn with gap-free lines
-- Continuous vertical summing bus collecting all inputs
-- Feedback resistor clearly shown (Pin 1 → Rf → Pin 2)
-- Power connections (Pin 8 → +5V, Pin 4 → GND, Pin 3 → GND/Vref)
-- Switch-to-resistor connections (no gaps)
-- For positive weights: Mark switches with "*" indicating SWAPPED wiring
-- Title: "PERCEPTRON - ANALOG SUMMING CIRCUIT"
-- Show component count, Rf value, power supply info
-
-**KiCad Export Button:**
-- "Export KiCad" button on schematic dialog
-- Generates .kicad_sch file format
-- **CRITICAL**: Must include COMPLETE NETLIST with all wire connections
-- Power symbols (+5V, GND)
-- All component-to-component wiring defined
-- Pin assignments correct (Pin 2 = IN-, Pin 3 = IN+, Pin 1 = OUT, etc.)
-- SPICE simulation metadata (Spice_Primitive, Spice_Model)
-- File must load in KiCad and be simulatable
-
-**NETLIST REQUIREMENTS (Critical for KiCad):**
-Must define wires for:
-1. Each switch → resistor
-2. Each resistor → summing junction
-3. Summing junction → op-amp Pin 2
-4. Feedback: Pin 1 → Rf → Pin 2
-5. Power: Pin 8 → +5V, Pin 4 → GND, Pin 3 → GND
-6. Output: Pin 1 → LED resistor → LED → GND
-
-================================================================================
-PART 5: BREADBOARD - ELECTRICALLY ACCURATE LAYOUT ENGINE
-================================================================================
-
-**POCBreadboardDialog.cs - Hole-Based Circuit Layout**
-
-**CRITICAL PRINCIPLES:**
-
-1. **Electrical Accuracy First**: This is NOT just a visual diagram. The breadboard must
-   represent a REAL circuit that can be built and will function.
-
-2. **Hole-Based Placement**: Every component must be placed at specific (row, column)
-   coordinates. Holes represent actual breadboard electrical connectivity:
-   - Vertical columns of 5 holes are electrically connected (same node)
-   - Holes across the center channel are NOT connected
-   - Power rails run horizontally (all holes in a rail are connected)
-
-3. **Component Positioning**:
-   - Track exact hole positions for every component lead
-   - Calculate hit regions that EXACTLY match visual component positions
-   - Use `GetHolePos(bbLeft, bbTop, row, col)` for all coordinate calculations
-   - Hole spacing: 20px (2× standard for detailed view)
-
-4. **Electrical Connectivity**:
-   - Model which holes are connected (vertical groups of 5)
-   - Draw jumper wires only between different electrical nodes
-   - All power connections must reach actual power rail holes
-   - All ground connections must reach actual ground rail holes
-
-**LAYOUT SPECIFICATIONS:**
-
-**Show 4 inputs in detail** (scalable to 3-6):
-- Row spacing: 4 rows per input (allows room for components and wiring)
-- Start at row D (row 3) - gives room for power connections above
-- Column allocations:
-  - Column 2: Shared ground bus for all switches
-  - Column 3: Switch +5V terminals
-  - Column 5: Switch common terminals
-  - Column 15-17: Input resistors (span 2 columns)
-  - Column 25: Summing bus (yellow vertical wire)
-  - Column 30: Op-amp (DIP-8 straddling center channel)
-  - Column 40-42: Output LED resistor (span 2 columns)
-  - Column 46: Output LED
-
-**Power Rails:**
-- Top and bottom rails with clustered holes
-- Clusters of 5 holes with 1-space gaps (dense power distribution)
-- Row/column numbering: A-Z rows, 5/10/15/20... columns
-
-**Component Registration:**
-- RegisterComponent with exact hit rectangles matching visual positions
-- Rectangle must cover where component is ACTUALLY drawn
-- Example: Resistor spans x to x+40, y-5 to y+5 → Rectangle(x, y-5, 40, 10)
-
-**Wire Drawing:**
-- All wires 4-5px thick for visibility
-- Color-coded by input (red, blue, yellow, green, etc.)
-- Ground bus: 2px (thinner to reduce visual weight)
-- Straight jumper wires (not curved - simpler and clearer)
-
-**Power Supply Selector:**
-- ComboBox dropdown with options:
-  - "Off-board (9V battery + 7805)" - Default, clean layout
-  - "On-board (battery + regulator on breadboard)" - Shows schematic overlay
-  - "USB 5V direct (no regulator)"
-  - "Bench supply (wire to rails only)"
-
-**Debug Toggle:**
-- CheckBox labeled "Debug"
-- When ON: Show cyan hit rectangles around all components with coordinates
-- Helps verify click detection and component positioning
-
-**Click Selection (Not Hover):**
-- MouseClick event handler (not MouseMove)
-- Hit test to find component at click location
-- Display selected component in detail panel
-- Highlight selected with yellow 3px border
-
-**ELECTRICAL CONNECTIONS (Must All Be Present):**
-
-Per Input:
-- Red wire: Switch +5V terminal → top +5V rail
-- Black wire: Switch GND terminal → shared ground bus (column 2) → top GND rail
-- Colored wire: Switch common → resistor input
-- Colored wire: Resistor output → summing bus (column 25)
-
-Op-Amp:
-- Red wire: Pin 8 (V+) → top +5V rail
-- Black wire: Pin 4 (GND) → bottom GND rail
-- Black wire: Pin 3 (IN+) → bottom GND rail (for inverting config)
-
-Summing Bus:
-- Yellow vertical wire: Collects all resistor outputs
-- Yellow jumper: Summing bus → op-amp Pin 2 (IN-)
-- Feedback: Pin 2 → Rf (10kΩ, 2-column resistor) → Pin 1
-
-Output:
-- Green wire: Op-amp Pin 1 → current limiting resistor (470Ω)
-- Green wire: Resistor → LED anode
-- Black wire: LED cathode → bottom GND rail
-
-**VALIDATION CHECKLIST:**
-- All components have power (switches, op-amp powered)
-- All grounds connected to ground rails
-- Summing bus collects ALL inputs
-- Feedback path Pin 1 → Pin 2 complete
-- No wires going off-screen or to nowhere
-- Circuit path traceable from input to output
-- Matches validated schematic topology
-
-================================================================================
-PART 6: BILL OF MATERIALS (BOM) - ACCURATE PRICING
-================================================================================
-
-Use PartsDatabase for all component specifications.
-
-**BOMDialog.cs Requirements:**
-- DataGridView showing: QTY, DESCRIPTION, VALUE, PACKAGE, MFR PART NUMBER, SUPPLIER, UNIT $
-- Calculate input resistors using E24 standard values (round to nearest)
-- Fixed components (op-amp, power supply, breadboard, etc.)
-- Per-input components (switches, resistors - quantity based on node count)
-- Total cost calculation
-- "Copy to Clipboard" button
-- "Export CSV" button for ordering
-
-**Cost Structure (4-input example):**
-- Fixed components: ~$20
-- Per-input components: ~$1.85 each
-- Total for 4-input: ~$27
-- Total for 16-input: ~$50
-
-================================================================================
-PART 7: KICAD PROFESSIONAL EXPORT
-================================================================================
-
-**KiCadExporter.cs - Generate Simulatable Schematics**
-
-**Output Format:** .kicad_sch (S-expression format)
-
-**Required Sections:**
-1. Header with version, UUID, paper size
-2. Title block with circuit info (input count, Rf value, date)
-3. Library symbols (resistors, op-amp, switches, LEDs, power symbols)
-4. Component definitions with properties (Reference, Value, position)
-5. **NETLIST** (wiring connections) - **CRITICAL**
-6. Power symbols (+5V, GND)
-
-**Netlist Must Include (Complete Circuit):**
-- Switch → Resistor wires (for each input)
-- Resistor → Summing junction wires (for each input)
-- Summing junction → Op-amp Pin 2 (IN-)
-- Feedback: Pin 1 → Rf → Pin 2
-- Power: Pin 8 → +5V, Pin 4 → GND, Pin 3 → GND
-- Output: Pin 1 → LED resistor → LED → GND
-
-**Wire Syntax:**
-```
-(wire (pts (xy x1 y1) (xy x2 y2)))  ; Component A to Component B
-```
-
-**SPICE Integration:**
-- Add Spice_Primitive and Spice_Model properties to op-amp
-- Circuit must be simulatable in KiCad with ngspice
-- Verify DC operating point matches software calculations
-
-================================================================================
-PART 8: VINTAGE PRINTER DEBUG OUTPUT
-================================================================================
-
-**PrinterDialog.cs - 1950s Teletype Style Debug Window**
-
-**Aesthetic:**
-- Aged cream paper background: Color.FromArgb(242, 238, 225)
-- Dark gray text: Color.FromArgb(40, 40, 40)
-- Courier New font (9pt, typewriter style)
-- RichTextBox with auto-scroll
-- Borderless, stays on top (TopMost = true)
-
-**Functionality:**
-- `PrintLine(string message)` - Add line to output and log file
-- `PrintDebug(string category, string message)` - Timestamped debug output
-- `Clear()` - Clear output window
-- Auto-append to %appdata%\Mark1\Log.txt
-- Thread-safe (uses InvokeRequired pattern)
-
-**Header Output:**
-```
-═══════════════════════════════════════════════════════════
-    MARK I PERCEPTRON SIMULATOR - TELETYPE OUTPUT
-    2026-02-04 23:45:12
-═══════════════════════════════════════════════════════════
-```
-
-**Usage:**
-- Breadboard dialog has "Debug" checkbox
-- When ON: Output click detection info to Printer
-- MainForm has "Print" toggle button (future - opens/closes Printer dialog)
-
-================================================================================
-PART 9: CODE ORGANIZATION & ARCHITECTURE
-================================================================================
-
-**Use #regions for logical grouping:**
-
-POCBreadboardDialog.cs organization:
-```
-#region Component Drawing Helpers (Reusable Graphics)
-  - DrawMiniSwitch
-  - DrawMiniLED
-  - DrawMiniResistorWithBands
-  - DrawLM358Component
-  - etc.
-#endregion
-
-#region Hole-Based Circuit Layout (Electrically Accurate)
-  - GetHolePos
-  - GetPowerRailHole
-  - DrawJumperWire
-  - DrawConnectionDot
-#endregion
-
-#region 1958 Perceptron Circuit Layout (Inverting Summing Amplifier)
-  - DrawInputChannelHoleBased
-  - DrawOpAmpHoleBased
-  - DrawSummingBusHoleBased
-  - DrawOutputSectionHoleBased
-#endregion
-```
-
-**Future Network Type Preparation:**
-- Current implementation: 1958 Perceptron (inverting summer)
-- TODO: 1960 Widrow-Hoff LMS (continuous error, different learning rule)
-- TODO: 1986 Backpropagation (multi-layer, ReLU, hidden layer on breadboard)
-
-Structure should allow parameterization by network type for future expansion.
-
-================================================================================
-PART 10: VALIDATION & TESTING REQUIREMENTS
-================================================================================
-
-**Before considering the build complete:**
-
-1. **Electrical Validation**:
-   - Trace schematic circuit manually
-   - Verify against standard op-amp summer topology
-   - Check all power connections
-   - Verify feedback path
-
-2. **Breadboard Validation**:
-   - Compare every breadboard connection to schematic
-   - Verify hole positions make electrical sense
-   - Check all jumper wires reach their destinations
-   - Enable Debug mode and verify hit rectangles align with visuals
-
-3. **KiCad Export Validation**:
-   - Export a circuit
-   - Load in KiCad (File → Open)
-   - Verify all components appear
-   - Check netlist completeness (Tools → Netlist)
-   - Run SPICE simulation (Tools → Simulator)
-   - Verify DC operating point
-
-4. **Build Testing**:
-   - Follow breadboard layout with real components
-   - Verify circuit functions as perceptron
-   - Output voltage should match software calculations
-   - LED should light for positive outputs
-
-**Create CIRCUIT_AUDIT.md documenting all validation steps and results.**
-
-================================================================================
-PART 11: KEY IMPLEMENTATION DETAILS & LESSONS LEARNED
-================================================================================
-
-**Critical Bugs to Avoid:**
-
-1. **Coordinate System Consistency**:
-   - Breadboard drawing uses (x, y, width, height) parameters
-   - Power rail calculations must use SAME coordinate system
-   - GetBottomPowerRailY(bbTop, bbHeight) must return bbTop + bbHeight - 25
-   - Don't mix different coordinate origins!
-
-2. **Component Visual vs Electrical Position**:
-   - Where you DRAW a component must match where you REGISTER it for clicks
-   - RegisterComponent rectangle must EXACTLY match visual bounds
-   - Example: Resistor drawn from x to x+40 → Rectangle(x, y-5, 40, 10)
-
-3. **Resistor Scaling**:
-   - Resistors span 2 columns (2 × holeSpacing = 40px)
-   - Don't stretch resistors to fill large gaps - use jumper wires
-   - Visual component size separate from electrical span
-
-4. **Power Rail Holes**:
-   - Clusters of 5 holes with 1-space gaps (not 7-space gaps)
-   - Dense distribution allows flexible component placement
-   - Calculate rail hole positions accurately (GetPowerRailHole)
-
-5. **Avoid Duplicate Code**:
-   - Don't have OLD visual-only AND NEW hole-based methods
-   - Remove dead code immediately after replacement
-   - One source of truth for each feature
-
-6. **Hit Testing**:
-   - Don't register breadboard itself as clickable (covers everything)
-   - Enlarge hit regions to match 2× scaled layout
-   - Use click selection (not hover) for deliberate component inspection
-
-7. **Debug First, Claim Later**:
-   - Add visual debug markers to verify calculations
-   - Don't claim fixes work until tested
-   - Debug mode should show hit rectangles, coordinates, connections
-
-================================================================================
-PART 12: BUILDING THE APPLICATION (STEP-BY-STEP)
-================================================================================
-
-**Phase 1: Core Simulator (from original prompt.txt)**
-- Main window with custom chrome
-- Switch/Knob/LED grids
-- PerceptronEngine with 7 math rules
-- Learning algorithm
-- Save/Load functionality
-- Manual with vintage paper aesthetic
-- Interactive Brain visualization
-- ~200 hours traditional, ~20 hours with AI
-
-**Phase 2: Hardware Build Documentation**
-- PartsDatabase with real components and prices
-- BOMDialog with E24 resistor calculations
-- PrintSchematicDialog with circuit symbols
-- ~89 hours traditional, ~8 hours with AI
-
-**Phase 3: Electrical Accuracy (NEW)**
-- BreadboardModel for connectivity
-- Hole-based component placement
-- Complete wire routing with all connections
-- Power rail calculations
-- Click detection with exact hit regions
-- ~115 hours traditional, ~10 hours with AI
-
-**Phase 4: Professional Integration (NEW)**
-- KiCadExporter with complete netlist
-- SPICE simulation support
-- PrinterDialog for debug output
-- Circuit validation documentation
-- ~40 hours traditional, ~4 hours with AI
-
-**Total Development:**
-- Traditional: ~409 hours
-- AI-Assisted: ~40-50 hours
-- **Efficiency: 8-10× multiplier**
-
-================================================================================
-PART 13: FINAL DELIVERABLES
-================================================================================
-
-**Application Features:**
-- 13 custom vintage controls
-- 7 learning algorithms (1958-1986)
-- Interactive brain visualization
-- Complete hardware build documentation
-- Professional KiCad export
-- Electrically-validated circuits
-
-**Documentation:**
-- CLAUDE.md: Developer guide
-- README.md: User-facing documentation
-- product_analysis.md: Market value ($30,675)
-- CIRCUIT_AUDIT.md: Electrical validation report
-
-**Validation:**
-- ✅ Schematic electrically correct
-- ✅ Breadboard buildable and accurate
-- ✅ KiCad export simulatable
-- ✅ Code clean (0 warnings, 0 errors)
-
-**The result**: A production-ready, electrically-validated Mark I Perceptron Simulator that
-bridges educational software and real hardware, allowing users to train a network in software,
-export it to professional tools, simulate it, and then build it physically with confidence
-that it will work.
-
-================================================================================
-END OF SPECIFICATION
-================================================================================
-
-Feed this document and perceptrons.png to Claude Code with the instruction:
-"Build the Mark I Perceptron Simulator following this complete specification.
-Validate all circuits electrically. Ensure breadboard layouts are buildable and accurate."
-
-The AI should produce a fully-validated, production-ready application matching this exact
-specification, with all circuits verified and ready for real-world hardware implementation.

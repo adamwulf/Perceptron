@@ -6,12 +6,14 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>resources\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="resources\app.ico" />
     <EmbeddedResource Include="resources\perceptrons.png" />
     <EmbeddedResource Include="resources\prompt.txt" />
-    <EmbeddedResource Include="resources\SpecialElite-Regular.ttf" />
+    <EmbeddedResource Include="resources\TT2020StyleE-Regular.ttf" />
   </ItemGroup>
 
 </Project>

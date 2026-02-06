@@ -1,5 +1,7 @@
 # Mark I Perceptron Simulator
 
+[**▶ Video Tutorial**](https://www.youtube.com/watch?v=l-9ALe3U-Fg)
+
 ### *The Machine That Started It All — Recreated in Code*
 
 <p align="center">
@@ -11,8 +13,34 @@
 
 ---
 
+**Do you want to understand AI at its most fundamental level?**
+
+This program takes you back to the 1950s, where artificial intelligence was born — not inside a computer, but in analog hardware. The Mark I Perceptron was a physical machine made of wires, switches, and resistors that could *learn*. AI didn't start as software. It started as a circuit.
+
+This simulator lets you operate that machine. Flip toggle switches, turn weight dials, and watch a neural network learn in real time. But it goes further than simulation: it gives you everything you need to **build the real thing**. Train any network, and the program generates a complete circuit schematic, an interactive breadboard layout, and a bill of materials with real part numbers you can order today. You can solder together a working perceptron on your desk.
+
+The included Operator's Manual is styled as a declassified 1950s government document and covers the real history, the math, and step-by-step build instructions. Video tutorials walk you through it all.
+
+Every line of this program was written by AI. And embedded inside it — in the Operator's Manual — is a complete copy of itself, written in plain English: the prompt that was used to generate the entire codebase. Feed that prompt back into an AI, and it rebuilds the program from scratch. This application carries an embryonic copy of itself within itself.
+
+**An AI program about AI, written by AI, that contains the instructions to recreate itself.**
+
+---
+
+<p align="center">
+  <img src="screenshots/MainScreen.png" width="800" />
+</p>
+
+**Keyboard Shortcuts:** When you click on a knob, use the up-down, left-right arrows.
+
 > *"The Navy revealed the embryo of an electronic computer today that it expects will be able to walk, talk, see, write, reproduce itself, and be conscious of its existence."*
 > — **New York Times, July 1958**
+
+A topological look at the hardware configuration.
+
+<p align="center">
+  <img src="screenshots/TheBrain.png" width="800" />
+</p>
 
 ---
 
@@ -189,25 +217,38 @@ What took Frank Rosenblatt years of research and a room full of hardware, I recr
 
 ## Technical Details
 
-| Metric | Value |
-|--------|-------|
-| Language | C# / .NET 8.0 Windows Forms |
-| Lines of Code | ~12,050 (clean, validated) |
-| Custom Controls | 15 (including MathDialControl, TogglePlateControl) |
-| Dialog Windows | 6 (Manual, Brain, Schematic, Breadboard, BOM, Printer) |
-| Math Rules | 7 (1958 to 1986: Perceptron, Widrow-Hoff, Backprop) |
-| Export Formats | KiCad (.kicad_sch w/ netlist), CSV (BOM), PNG, JSON |
-| Circuit Validation | ✅ Electrically verified (see CIRCUIT_AUDIT.md) |
-| Buildability | ✅ Validated - will function when built |
-| Traditional Dev Time (est.) | ~400-500 hours |
-| AI-Assisted Dev Time | ~40-50 hours |
+This program was written using Claude Code. 
+It is an AI program that teaches the foundations of AI, written with AI, for AI and the ability to remake itself with built-in AI prompts.
 | Efficiency Multiplier | **8-12×** |
 
 ---
 
 ## Screenshots
 
-*Coming soon — or better yet, download and see for yourself!*
+### Main Interface
+The full simulator with toggle switches, rotary weight knobs, analog meter, and vintage control panel.
+
+<img src="screenshots/MainScreen.png" width="800" />
+
+### Training in Action
+After training, the perceptron has learned weights and the output LED lights up for recognized patterns.
+
+<img src="screenshots/Learning.png" width="800" />
+
+### Operator's Manual
+A declassified 1950s-style manual with redacted chapters, operating procedures, and build instructions.
+
+<img src="screenshots/Manual.png" width="500" />
+
+### Circuit Schematic
+Professional schematic of the analog summing circuit with LM358 op-amp, SPDT switches, and calculated resistor values. Exportable to KiCad.
+
+<img src="screenshots/Schematics.png" width="800" />
+
+### Breadboard Layout
+Interactive, electrically-accurate breadboard view with hole-based component placement, color-coded wiring, and hover tooltips.
+
+<img src="screenshots/BreadBoard.png" width="800" />
 
 ---
 
@@ -216,7 +257,7 @@ What took Frank Rosenblatt years of research and a room full of hardware, I recr
 - **Frank Rosenblatt** (1928-1971) — For inventing the perceptron and starting the AI revolution
 - **Welch Labs** — For the [excellent educational video](https://www.youtube.com/watch?v=l-9ALe3U-Fg) that inspired this project
 - **Anthropic's Claude** — For being an exceptional coding partner
-- **You** — For keeping the history of computing alive
+- Steve Rives, AI Engineer
 
 ---
 

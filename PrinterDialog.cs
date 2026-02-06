@@ -33,6 +33,7 @@ public class PrinterDialog : Form
     // Embedded typewriter font
     private static PrivateFontCollection? _fontCollection;
     private static Font? _typewriterFont;
+    private static List<string> _fontDiag = new() { "font load not started" };
 
     public PrinterDialog()
     {
@@ -43,8 +44,16 @@ public class PrinterDialog : Form
         EnsureLogDirectory();
     }
 
+    // P/Invoke to register font file with GDI (required for RichTextBox)
+    [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
+    private static extern int AddFontResourceEx(string lpFileName, uint fl, IntPtr pdv);
+
+    private static string? _tempFontPath;
+
     /// <summary>
-    /// Load the embedded Special Elite typewriter font.
+    /// Load the embedded OldNewspaperTypes font (SIL OFL licensed).
+    /// Worn, imperfect newsprint serif — nostalgic 1950s newspaper aesthetic.
+    /// Extracts to temp file and registers with GDI so RichTextBox can use it.
     /// </summary>
     private static void LoadTypewriterFont()
     {
@@ -53,46 +62,55 @@ public class PrinterDialog : Form
 
         try
         {
-            _fontCollection = new PrivateFontCollection();
-
-            // Load font from embedded resource
             var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "PerceptronSimulator.resources.SpecialElite-Regular.ttf";
+            var resourceName = "PerceptronSimulator.resources.TT2020StyleE-Regular.ttf";
 
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            _fontDiag = new() { "Loading started..." };
+
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream == null)
             {
-                if (stream == null)
-                {
-                    // Fallback to Courier New if font not found
-                    _typewriterFont = new Font("Courier New", 9f, FontStyle.Regular);
-                    return;
-                }
-
-                // Allocate memory for the font data
-                byte[] fontData = new byte[stream.Length];
-                stream.Read(fontData, 0, (int)stream.Length);
-
-                // Pin the font data in memory
-                IntPtr fontPtr = Marshal.AllocCoTaskMem(fontData.Length);
-                Marshal.Copy(fontData, 0, fontPtr, fontData.Length);
-
-                // Add the font to the private collection
-                _fontCollection.AddMemoryFont(fontPtr, fontData.Length);
-
-                // Free the memory
-                Marshal.FreeCoTaskMem(fontPtr);
-
-                // Create the font (Special Elite looks good at 10pt for typewriter effect)
-                _typewriterFont = new Font(_fontCollection.Families[0], 10f, FontStyle.Regular);
-
-                // Debug: Verify font loaded
-                System.Diagnostics.Debug.WriteLine($"Loaded typewriter font: {_typewriterFont.Name}");
+                _fontDiag.Add($"FAIL: resource '{resourceName}' not found");
+                _typewriterFont = new Font("Courier New", 9f, FontStyle.Regular);
+                return;
             }
+            _fontDiag.Add($"Resource found, size={stream.Length} bytes");
+
+            byte[] fontData = new byte[stream.Length];
+            stream.Read(fontData, 0, (int)stream.Length);
+
+            _tempFontPath = Path.Combine(Path.GetTempPath(), "TT2020StyleE-Regular.ttf");
+            File.WriteAllBytes(_tempFontPath, fontData);
+            _fontDiag.Add($"Wrote temp file: {_tempFontPath}, exists={File.Exists(_tempFontPath)}, size={new FileInfo(_tempFontPath).Length}");
+
+            int gdiResult = AddFontResourceEx(_tempFontPath, 0x10, IntPtr.Zero);
+            _fontDiag.Add($"AddFontResourceEx returned: {gdiResult} (>0 = success)");
+
+            _fontCollection = new PrivateFontCollection();
+            _fontCollection.AddFontFile(_tempFontPath);
+            _fontDiag.Add($"GDI+ families count: {_fontCollection.Families.Length}");
+
+            if (_fontCollection.Families.Length == 0)
+            {
+                _fontDiag.Add("FAIL: No font families loaded");
+                _typewriterFont = new Font("Courier New", 9f, FontStyle.Regular);
+                return;
+            }
+
+            string fontFamilyName = _fontCollection.Families[0].Name;
+            _fontDiag.Add($"GDI+ family name: '{fontFamilyName}'");
+
+            _typewriterFont = new Font(_fontCollection.Families[0], 12f, FontStyle.Regular);
+            _fontDiag.Add($"Font created: Name='{_typewriterFont.Name}', Family='{_typewriterFont.FontFamily.Name}', Size={_typewriterFont.Size}");
+
+            bool match = _typewriterFont.FontFamily.Name == fontFamilyName;
+            _fontDiag.Add($"Font resolved correctly: {match}");
+            if (!match)
+                _fontDiag.Add($"MISMATCH: requested '{fontFamilyName}' but got '{_typewriterFont.FontFamily.Name}'");
         }
         catch (Exception ex)
         {
-            // Fallback to Courier New on any error
-            System.Diagnostics.Debug.WriteLine($"Failed to load Special Elite font: {ex.Message}");
+            _fontDiag.Add($"EXCEPTION: {ex.GetType().Name}: {ex.Message}");
             _typewriterFont = new Font("Courier New", 9f, FontStyle.Regular);
         }
     }
@@ -256,7 +274,8 @@ public class PrinterDialog : Form
     {
         if (_fontCollection != null && _fontCollection.Families.Length > 0)
         {
-            _outputText.Font = new Font(_fontCollection.Families[0], _fontSize, FontStyle.Regular);
+            // Use font family name (not FontFamily object) so GDI can resolve it for RichTextBox
+            _outputText.Font = new Font(_fontCollection.Families[0].Name, _fontSize, FontStyle.Regular);
         }
         else
         {
@@ -294,6 +313,8 @@ public class PrinterDialog : Form
         PrintLine("    MARK I PERCEPTRON SIMULATOR - TELETYPE OUTPUT");
         PrintLine("    " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
         PrintLine("    Font: " + _outputText.Font.Name + " " + _outputText.Font.Size + "pt");
+        foreach (var d in _fontDiag)
+            PrintLine("    > " + d);
         PrintLine("- - - - - - - - - - - - - - - - - - - - - - - - - - - -");
         PrintLine("");
     }
@@ -318,9 +339,14 @@ public class PrinterDialog : Form
             return;
         }
 
-        // Add to output window
+        // Add to output window — select the newly appended text and apply font
+        int start = _outputText.TextLength;
         _outputText.AppendText(message + Environment.NewLine);
-        _outputText.SelectionStart = _outputText.Text.Length;
+        int end = _outputText.TextLength;
+        _outputText.Select(start, end - start);
+        _outputText.SelectionFont = _typewriterFont ?? _outputText.Font;
+        _outputText.SelectionLength = 0;
+        _outputText.SelectionStart = end;
         _outputText.ScrollToCaret();
 
         // Append to log file
