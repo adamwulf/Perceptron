@@ -118,7 +118,7 @@ final class PerceptronPanelViewController: UIViewController {
         biasLabel.text = "BIAS"
         view.addSubview(biasLabel)
 
-        formulaPlate.lines = ["OUTPUT =", "  SUM(Switch x Weight) + Bias"]
+        formulaPlate.lines = ["OUTPUT = SUM(Switch x Weight) + Bias"]
         view.addSubview(formulaPlate)
 
         procedurePlate.lines = [
@@ -264,7 +264,7 @@ final class PerceptronPanelViewController: UIViewController {
         outputLed.frame = CGRect(x: x + width / 2 - 30, y: y, width: 60, height: 44)
         y += 44 + 12
 
-        let formulaHeight: CGFloat = 68 // two engraved lines + padding
+        let formulaHeight: CGFloat = 48 // single engraved line + padding
         formulaPlate.frame = CGRect(x: x, y: y, width: width, height: formulaHeight)
         y += formulaHeight + 12
 
