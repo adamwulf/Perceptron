@@ -95,9 +95,14 @@ final class MetalPlateView: UIView {
         MetalPlate.drawScrew(ctx, x: plate.minX + 8, y: plate.maxY - 14, size: 6, slot: true)
         MetalPlate.drawScrew(ctx, x: plate.maxX - 14, y: plate.maxY - 14, size: 6, slot: true)
 
-        // Engraved text.
+        // Engraved text — the block of lines is vertically centered in the
+        // plate so plates of any height fit their content without clipping.
         let font = UIFont.monospacedSystemFont(ofSize: 11, weight: .bold)
-        var textY = plate.minY + 20
+        let lineHeight: CGFloat = 16
+        let blockHeight = lineHeight * CGFloat(lines.count)
+        // Keep clear of the corner screws (screws sit ~14pt in from the top).
+        let minTop = plate.minY + 16
+        var textY = max(minTop, plate.midY - blockHeight / 2)
         let textX = plate.minX + 20
         for line in lines {
             let shadow: [NSAttributedString.Key: Any] = [
@@ -106,7 +111,7 @@ final class MetalPlateView: UIView {
                 .font: font, .foregroundColor: UIColor(red: 180/255, green: 185/255, blue: 175/255, alpha: 1)]
             (line as NSString).draw(at: CGPoint(x: textX + 1, y: textY + 1), withAttributes: shadow)
             (line as NSString).draw(at: CGPoint(x: textX, y: textY), withAttributes: light)
-            textY += 16
+            textY += lineHeight
         }
     }
 }
