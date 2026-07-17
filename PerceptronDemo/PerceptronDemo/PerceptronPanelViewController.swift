@@ -40,6 +40,8 @@ final class PerceptronPanelViewController: UIViewController {
     private let learnPlusButton = PushButton()
     private let learnMinusButton = PushButton()
     private let resetButton = PushButton()
+    private let rateKnob = KnobControl()
+    private let rateLabel = MetalLabelView()
 
     // MARK: - Lifecycle
 
@@ -146,6 +148,20 @@ final class PerceptronPanelViewController: UIViewController {
         resetButton.glowColor = UIColor(red: 200/255, green: 80/255, blue: 60/255, alpha: 1)
         resetButton.onTap = { [weak self] in self?.resetAll() }
         view.addSubview(resetButton)
+
+        // RATE knob — controls how much each Learn press moves the weights.
+        // Matches the desktop: range -30…30, starts at 10.0 (the default that
+        // makes a single press jump each weight by ±10).
+        rateKnob.step = 0.05
+        rateKnob.value = engine.learningRate   // 10.0 by default
+        rateKnob.onValueChanged = { [weak self] in
+            guard let self else { return }
+            self.engine.learningRate = self.rateKnob.value
+        }
+        view.addSubview(rateKnob)
+
+        rateLabel.text = "RATE"
+        view.addSubview(rateLabel)
     }
 
     // MARK: - Layout
@@ -156,7 +172,7 @@ final class PerceptronPanelViewController: UIViewController {
         let content = safe.insetBy(dx: margin, dy: margin)
 
         // Reserve a strip at the bottom for Learn/Reset.
-        let buttonStripHeight: CGFloat = 56
+        let buttonStripHeight: CGFloat = 92 // taller: holds the RATE knob + its value text
         let panelHeight = content.height - buttonStripHeight - 16
         let panelTop = content.minY
 
@@ -241,11 +257,28 @@ final class PerceptronPanelViewController: UIViewController {
     }
 
     private func layoutButtonStrip(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {
+        // Strip order mirrors the desktop: [Learn +] [RATE] [Learn -] [Reset].
+        // The RATE column is a knob (with a small label above it); the other
+        // three are push buttons vertically centered on the knob body.
         let gap: CGFloat = 16
-        let buttonWidth = (width - gap * 2) / 3
-        learnPlusButton.frame = CGRect(x: x, y: y, width: buttonWidth, height: height)
-        resetButton.frame = CGRect(x: x + buttonWidth + gap, y: y, width: buttonWidth, height: height)
-        learnMinusButton.frame = CGRect(x: x + (buttonWidth + gap) * 2, y: y, width: buttonWidth, height: height)
+        let rateColWidth: CGFloat = min(height + 8, 100) // knob is roughly square
+        let buttonWidth = (width - rateColWidth - gap * 3) / 3
+        let buttonHeight: CGFloat = 52
+        let buttonY = y + (height - buttonHeight) / 2
+
+        var cx = x
+        learnPlusButton.frame = CGRect(x: cx, y: buttonY, width: buttonWidth, height: buttonHeight)
+        cx += buttonWidth + gap
+
+        // RATE: label on top, knob filling the rest of the column.
+        rateLabel.frame = CGRect(x: cx + (rateColWidth - 44) / 2, y: y, width: 44, height: 18)
+        rateKnob.frame = CGRect(x: cx, y: y + 16, width: rateColWidth, height: height - 16)
+        cx += rateColWidth + gap
+
+        learnMinusButton.frame = CGRect(x: cx, y: buttonY, width: buttonWidth, height: buttonHeight)
+        cx += buttonWidth + gap
+
+        resetButton.frame = CGRect(x: cx, y: buttonY, width: buttonWidth, height: buttonHeight)
     }
 
     // MARK: - Behavior
