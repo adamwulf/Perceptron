@@ -172,7 +172,7 @@ final class PerceptronPanelViewController: UIViewController {
         let content = safe.insetBy(dx: margin, dy: margin)
 
         // Reserve a strip at the bottom for Learn/Reset.
-        let buttonStripHeight: CGFloat = 92 // taller: holds the RATE knob + its value text
+        let buttonStripHeight: CGFloat = 56
         let panelHeight = content.height - buttonStripHeight - 16
         let panelTop = content.minY
 
@@ -232,11 +232,27 @@ final class PerceptronPanelViewController: UIViewController {
             knob.frame = CGRect(x: cx, y: cy, width: knobSize, height: knobSize)
         }
 
-        // Bias knob centered below the grid.
-        let biasY = top + CGFloat(gridSize) * cell + 20
-        let biasX = x + width / 2 - knobSize / 2
-        biasLabel.frame = CGRect(x: biasX - 54, y: biasY + knobSize / 2 - 12, width: 48, height: 22)
-        biasKnob.frame = CGRect(x: biasX, y: biasY, width: knobSize, height: knobSize)
+        // BIAS and RATE knobs, side by side, centered below the grid.
+        // Each has its label plate directly above the knob.
+        let extraKnobSize = min(knobSize, 78)
+        let labelHeight: CGFloat = 20
+        let labelWidth: CGFloat = 48
+        let pairGap: CGFloat = 40
+        let pairWidth = extraKnobSize * 2 + pairGap
+        let pairX = x + (width - pairWidth) / 2
+        let knobsY = top + CGFloat(gridSize) * cell + 20 + labelHeight + 4
+
+        let biasX = pairX
+        biasLabel.frame = CGRect(x: biasX + (extraKnobSize - labelWidth) / 2,
+                                 y: top + CGFloat(gridSize) * cell + 20,
+                                 width: labelWidth, height: labelHeight)
+        biasKnob.frame = CGRect(x: biasX, y: knobsY, width: extraKnobSize, height: extraKnobSize)
+
+        let rateX = pairX + extraKnobSize + pairGap
+        rateLabel.frame = CGRect(x: rateX + (extraKnobSize - labelWidth) / 2,
+                                 y: top + CGFloat(gridSize) * cell + 20,
+                                 width: labelWidth, height: labelHeight)
+        rateKnob.frame = CGRect(x: rateX, y: knobsY, width: extraKnobSize, height: extraKnobSize)
     }
 
     private func layoutRightColumn(x: CGFloat, top: CGFloat, width: CGFloat, height: CGFloat) {
@@ -257,28 +273,11 @@ final class PerceptronPanelViewController: UIViewController {
     }
 
     private func layoutButtonStrip(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {
-        // Strip order mirrors the desktop: [Learn +] [RATE] [Learn -] [Reset].
-        // The RATE column is a knob (with a small label above it); the other
-        // three are push buttons vertically centered on the knob body.
         let gap: CGFloat = 16
-        let rateColWidth: CGFloat = min(height + 8, 100) // knob is roughly square
-        let buttonWidth = (width - rateColWidth - gap * 3) / 3
-        let buttonHeight: CGFloat = 52
-        let buttonY = y + (height - buttonHeight) / 2
-
-        var cx = x
-        learnPlusButton.frame = CGRect(x: cx, y: buttonY, width: buttonWidth, height: buttonHeight)
-        cx += buttonWidth + gap
-
-        // RATE: label on top, knob filling the rest of the column.
-        rateLabel.frame = CGRect(x: cx + (rateColWidth - 44) / 2, y: y, width: 44, height: 18)
-        rateKnob.frame = CGRect(x: cx, y: y + 16, width: rateColWidth, height: height - 16)
-        cx += rateColWidth + gap
-
-        learnMinusButton.frame = CGRect(x: cx, y: buttonY, width: buttonWidth, height: buttonHeight)
-        cx += buttonWidth + gap
-
-        resetButton.frame = CGRect(x: cx, y: buttonY, width: buttonWidth, height: buttonHeight)
+        let buttonWidth = (width - gap * 2) / 3
+        learnPlusButton.frame = CGRect(x: x, y: y, width: buttonWidth, height: height)
+        resetButton.frame = CGRect(x: x + buttonWidth + gap, y: y, width: buttonWidth, height: height)
+        learnMinusButton.frame = CGRect(x: x + (buttonWidth + gap) * 2, y: y, width: buttonWidth, height: height)
     }
 
     // MARK: - Behavior
