@@ -268,10 +268,15 @@ final class PerceptronPanelViewController: UIViewController {
         formulaPlate.frame = CGRect(x: x, y: y, width: width, height: formulaHeight)
         y += formulaHeight + 12
 
-        // Procedure plate fills the remaining height; needs ~176pt for its
-        // 9 engraved lines (16pt each) plus top/bottom padding.
+        // Procedure plate is sized to its content, not stretched to fill the
+        // column. Its 9 engraved lines (16pt each) plus top/bottom padding need
+        // ~176pt; letting it grow with the window just adds empty brushed metal
+        // around the vertically-centered text. Cap it at whatever space is left
+        // so it never overflows the strip below on a short window.
+        let procedureContentHeight: CGFloat = 176
         let remaining = height - (y - top)
-        procedurePlate.frame = CGRect(x: x, y: y, width: width, height: max(remaining, 176))
+        procedurePlate.frame = CGRect(x: x, y: y, width: width,
+                                      height: min(procedureContentHeight, max(remaining, 0)))
     }
 
     private func layoutButtonStrip(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {

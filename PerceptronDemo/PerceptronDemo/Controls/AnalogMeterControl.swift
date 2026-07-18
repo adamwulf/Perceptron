@@ -30,12 +30,14 @@ final class AnalogMeterControl: UIView {
         super.init(frame: frame)
         backgroundColor = .clear
         isOpaque = false
+        contentMode = .redraw
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         backgroundColor = .clear
         isOpaque = false
+        contentMode = .redraw
     }
 
     deinit { displayLink?.invalidate() }

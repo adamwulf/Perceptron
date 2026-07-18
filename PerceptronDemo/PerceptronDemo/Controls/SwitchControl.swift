@@ -27,12 +27,14 @@ final class SwitchControl: UIView {
         super.init(frame: frame)
         backgroundColor = .clear
         isOpaque = false
+        contentMode = .redraw
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         backgroundColor = .clear
         isOpaque = false
+        contentMode = .redraw
     }
 
     override func draw(_ rect: CGRect) {
