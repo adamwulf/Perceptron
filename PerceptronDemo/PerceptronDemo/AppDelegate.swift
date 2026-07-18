@@ -17,7 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
-#if DEBUG
+#if DEBUG && targetEnvironment(macCatalyst)
     // MARK: - Debug Menu (Mac Catalyst)
 
     /// Size we resize windows to for capturing App Store screenshots.
