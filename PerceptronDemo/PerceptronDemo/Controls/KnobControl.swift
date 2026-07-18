@@ -47,6 +47,7 @@ final class KnobControl: UIView {
     private func commonInit() {
         backgroundColor = .clear
         isOpaque = false
+        contentMode = .redraw
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
         addGestureRecognizer(pan)
     }
