@@ -62,7 +62,7 @@ perceptron,neural network,AI,machine learning,rosenblatt,history,education,learn
 
 | Field | Value |
 |---|---|
-| Support URL | ⚠️ TODO (required) |
+| Support URL | https://milestonemade.com |
 | Marketing URL | ⚠️ TODO (optional) |
 | Privacy Policy URL | ⚠️ TODO (required if App Privacy declares data collection) |
 
@@ -90,12 +90,12 @@ perceptron,neural network,AI,machine learning,rosenblatt,history,education,learn
 | Contact first name | ⚠️ TODO |
 | Contact last name | ⚠️ TODO |
 | Contact phone | ⚠️ TODO |
-| Contact email | adam@adamwulf.me |
+| Contact email | adam@allume.com |
 | Review notes | Fully offline educational demo. No login, no network, no data collection. Flip the switches and turn the dials to "train" the perceptron; the meter and LED show the output. |
 
 ## Copyright
 
-⚠️ TODO — e.g. `2026 Milestone Made, LLC` (format: year + entity, no "©")
+2026 Milestone Made, LLC
 
 ## Screenshots
 
