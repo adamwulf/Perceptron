@@ -359,7 +359,7 @@ final class IntroViewController: UIViewController {
             let label = UILabel()
             label.numberOfLines = 0
             let text = NSMutableAttributedString(
-                string: "▸ \(term)  ",
+                string: "• \(term)  ",
                 attributes: [.font: Font.mono(13, .bold), .foregroundColor: Palette.engraved])
             text.append(NSAttributedString(
                 string: detail,
