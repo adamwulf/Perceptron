@@ -26,10 +26,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // first-time user always gets context about the machine. Deferred to
         // the next runloop so the panel is in the window hierarchy first —
         // presenting straight from willConnectTo, before the panel has
-        // appeared, silently drops the modal.
-        DispatchQueue.main.async { [weak panel] in
-            guard let panel else { return }
-            self.presentIntro(over: panel)
+        // appeared, silently drops the modal. Skipped under UI automation
+        // (-skipIntro) so tests can reach the panel directly.
+        if !ProcessInfo.processInfo.arguments.contains("-skipIntro") {
+            DispatchQueue.main.async { [weak panel] in
+                guard let panel else { return }
+                self.presentIntro(over: panel)
+            }
         }
     }
 

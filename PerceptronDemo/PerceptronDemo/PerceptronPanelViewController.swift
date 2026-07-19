@@ -107,6 +107,14 @@ final class PerceptronPanelViewController: UIViewController {
         centerToggle.onTap = { [weak self] in self?.toggleAllSwitches() }
         view.addSubview(centerToggle)
 
+        // Swipe the center button like a joystick to shift the pattern, in
+        // addition to the arrow buttons. A plain tap still toggles all/none.
+        for dir: UISwipeGestureRecognizer.Direction in [.up, .down, .left, .right] {
+            let swipe = UISwipeGestureRecognizer(target: self, action: #selector(handleCenterSwipe(_:)))
+            swipe.direction = dir
+            centerToggle.addGestureRecognizer(swipe)
+        }
+
         // Right column.
         view.addSubview(meter)
         outputLed.label = "OUTPUT"
@@ -209,14 +217,65 @@ final class PerceptronPanelViewController: UIViewController {
             sw.frame = CGRect(x: cx, y: cy, width: swSize, height: swSize * 1.4)
         }
 
-        // D-pad below the switch grid.
+        // D-pad below the switch grid. Each arrow's triangle is drawn at its
+        // original visual size and in its original position (its center sits
+        // `arrowOffset` from the d-pad center). The tappable frame is inflated
+        // by `hitPad` so it's easy to hit on iPad — the drawn triangle stays
+        // put, only the invisible touch target grows. The edge facing the
+        // center button is clamped so the enlarged area never overlaps it.
         let dpadCenterY = gridTop + CGFloat(gridSize) * (cell * 1.15) + 60
         let dpadCenterX = x + width / 2
-        centerToggle.frame = CGRect(x: dpadCenterX - 23, y: dpadCenterY - 23, width: 46, height: 46)
-        arrowUp.frame = CGRect(x: dpadCenterX - 20, y: dpadCenterY - 23 - 20, width: 40, height: 16)
-        arrowDown.frame = CGRect(x: dpadCenterX - 20, y: dpadCenterY + 23 + 4, width: 40, height: 16)
-        arrowLeft.frame = CGRect(x: dpadCenterX - 23 - 20, y: dpadCenterY - 20, width: 16, height: 40)
-        arrowRight.frame = CGRect(x: dpadCenterX + 23 + 4, y: dpadCenterY - 20, width: 16, height: 40)
+        let hArrow = CGSize(width: 40, height: 16)          // up / down triangle
+        let vArrow = CGSize(width: hArrow.height, height: hArrow.width) // left / right
+        let arrowOffset: CGFloat = 35   // distance from d-pad center to arrow center
+        let hitPad: CGFloat = 16        // touch padding added on each side
+        let centerHalf: CGFloat = 23
+
+        centerToggle.frame = CGRect(x: dpadCenterX - centerHalf, y: dpadCenterY - centerHalf,
+                                    width: centerHalf * 2, height: centerHalf * 2)
+
+        // Draws `size` centered on the arrow's on-screen point; pads the frame
+        // by `hitPad`, but clamps the inner edge (the one pointing at the d-pad
+        // center along `dir`) to the center button's boundary so the two never
+        // overlap. `arrowCenter` keeps the triangle at its true position even
+        // though the clamped frame is asymmetric.
+        func padded(_ view: ArrowButton, size: CGSize, dir: ArrowDirection) {
+            view.arrowSize = size
+            let cx: CGFloat, cy: CGFloat
+            var frame: CGRect
+            switch dir {
+            case .up:
+                cx = dpadCenterX; cy = dpadCenterY - arrowOffset
+                let bottom = dpadCenterY - centerHalf            // clamp to top of button
+                let top = cy - size.height / 2 - hitPad
+                frame = CGRect(x: cx - size.width / 2 - hitPad, y: top,
+                               width: size.width + hitPad * 2, height: bottom - top)
+            case .down:
+                cx = dpadCenterX; cy = dpadCenterY + arrowOffset
+                let top = dpadCenterY + centerHalf               // clamp to bottom of button
+                let bottom = cy + size.height / 2 + hitPad
+                frame = CGRect(x: cx - size.width / 2 - hitPad, y: top,
+                               width: size.width + hitPad * 2, height: bottom - top)
+            case .left:
+                cx = dpadCenterX - arrowOffset; cy = dpadCenterY
+                let right = dpadCenterX - centerHalf             // clamp to left of button
+                let left = cx - size.width / 2 - hitPad
+                frame = CGRect(x: left, y: cy - size.height / 2 - hitPad,
+                               width: right - left, height: size.height + hitPad * 2)
+            case .right:
+                cx = dpadCenterX + arrowOffset; cy = dpadCenterY
+                let left = dpadCenterX + centerHalf              // clamp to right of button
+                let right = cx + size.width / 2 + hitPad
+                frame = CGRect(x: left, y: cy - size.height / 2 - hitPad,
+                               width: right - left, height: size.height + hitPad * 2)
+            }
+            view.frame = frame
+            view.arrowCenter = CGPoint(x: cx - frame.minX, y: cy - frame.minY)
+        }
+        padded(arrowUp,    size: hArrow, dir: .up)
+        padded(arrowDown,  size: hArrow, dir: .down)
+        padded(arrowLeft,  size: vArrow, dir: .left)
+        padded(arrowRight, size: vArrow, dir: .right)
     }
 
     private func layoutKnobColumn(x: CGFloat, top: CGFloat, width: CGFloat, height: CGFloat) {
@@ -321,6 +380,16 @@ final class PerceptronPanelViewController: UIViewController {
         let turnOn = switches.contains { !$0.isOn }
         switches.forEach { $0.isOn = turnOn }
         updateOutput()
+    }
+
+    @objc private func handleCenterSwipe(_ gesture: UISwipeGestureRecognizer) {
+        switch gesture.direction {
+        case .up:    shiftPattern(dx: 0, dy: -1)
+        case .down:  shiftPattern(dx: 0, dy: 1)
+        case .left:  shiftPattern(dx: -1, dy: 0)
+        case .right: shiftPattern(dx: 1, dy: 0)
+        default:     break
+        }
     }
 
     private func shiftPattern(dx: Int, dy: Int) {
