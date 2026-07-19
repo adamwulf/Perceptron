@@ -212,18 +212,20 @@ public class MainForm : Form
         videoLink.MouseLeave += (s, e) => videoLink.ForeColor = Color.FromArgb(100, 180, 100);
 
         // Intro / About link — re-opens the welcome & explanation dialog.
+        // Amber tint (matching the Manual/Brain button glow) reads as an
+        // interactive affordance rather than dim static text.
         var aboutLink = new Label
         {
             Text = "ⓘ About",
-            ForeColor = Color.FromArgb(150, 150, 150),
+            ForeColor = Color.FromArgb(200, 180, 110),
             Font = new Font("Consolas", 8f, FontStyle.Bold),
             AutoSize = true,
             BackColor = Color.Transparent,
             Cursor = Cursors.Hand
         };
         aboutLink.Click += (s, e) => ShowIntroductionDialog();
-        aboutLink.MouseEnter += (s, e) => aboutLink.ForeColor = Color.FromArgb(210, 210, 210);
-        aboutLink.MouseLeave += (s, e) => aboutLink.ForeColor = Color.FromArgb(150, 150, 150);
+        aboutLink.MouseEnter += (s, e) => aboutLink.ForeColor = Color.FromArgb(255, 220, 120);
+        aboutLink.MouseLeave += (s, e) => aboutLink.ForeColor = Color.FromArgb(200, 180, 110);
         _toolTip.SetToolTip(aboutLink, "What is this machine? Show the introduction.");
 
         _titleBar.Controls.Add(_closeButton);

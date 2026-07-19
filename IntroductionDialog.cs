@@ -118,14 +118,14 @@ public class IntroductionDialog : Form
         _contentPanel.BringToFront();
 
         // "Don't show this again" lives in the dark strip below the paper.
+        // The dialog is a fixed size, so a manual bottom-left Location suffices.
         _dontShowAgain = new CheckBox
         {
             Text = "Don't show this on startup",
             ForeColor = Color.FromArgb(150, 150, 150),
             BackColor = Color.FromArgb(20, 20, 20),
             Font = new Font("Consolas", 9f),
-            AutoSize = true,
-            Anchor = AnchorStyles.Bottom | AnchorStyles.Left
+            AutoSize = true
         };
     }
 
@@ -139,7 +139,9 @@ public class IntroductionDialog : Form
         _paper = new PaperPanel
         {
             Location = new Point(20, 10),
-            Size = new Size(paperWidth, paperHeight)
+            Size = new Size(paperWidth, paperHeight),
+            // Friendly welcome page: no "DECLASSIFIED" watermark behind the body text.
+            ShowWatermark = false
         };
         _contentPanel.Controls.Add(_paper);
 
@@ -180,17 +182,21 @@ public class IntroductionDialog : Form
         int contentWidth = paperWidth - 80;
         int innerY = 6;
 
-        innerY = AddSectionHeader(scrollPanel, "WHAT IS THIS MACHINE?", contentWidth, innerY);
+        innerY = AddSectionHeader(scrollPanel, "WHAT IS THIS MACHINE?", innerY);
         innerY = AddBody(scrollPanel,
-            "This is a working recreation of the Mark I Perceptron — the world's " +
-            "first artificial neural network that could learn from experience. In 1958, " +
-            "Cornell psychologist Frank Rosenblatt showed that a machine could \"teach " +
-            "itself\" to tell two kinds of patterns apart, simply by being shown examples " +
-            "and corrected when it was wrong. The press called it the embryo of a computer " +
-            "that would one day walk, talk, and be conscious.",
+            "This is a working recreation of the Perceptron — the world's first " +
+            "artificial neural network that could learn from experience. In 1958, " +
+            "Cornell psychologist Frank Rosenblatt introduced the algorithm and " +
+            "demonstrated it on an IBM 704, showing that a machine could \"teach " +
+            "itself\" to tell two kinds of patterns apart, simply by being shown " +
+            "examples and corrected when it was wrong. The press called it the embryo " +
+            "of a computer that would one day walk, talk, and be conscious. Rosenblatt " +
+            "later built the idea into physical hardware — the Mark I Perceptron, " +
+            "completed around 1960 with a 400-photocell \"camera eye\" and motor-driven " +
+            "weights.",
             contentWidth, innerY);
 
-        innerY = AddSectionHeader(scrollPanel, "HOW A PERCEPTRON WORKS", contentWidth, innerY);
+        innerY = AddSectionHeader(scrollPanel, "HOW A PERCEPTRON WORKS", innerY);
         innerY = AddBody(scrollPanel,
             "A perceptron is surprisingly simple. It takes several inputs, gives each one a " +
             "\"weight\" (how much that input matters), adds them all up, and fires a YES or " +
@@ -209,7 +215,7 @@ public class IntroductionDialog : Form
             "the rule itself. That single idea grew into the neural networks behind modern AI.",
             contentWidth, innerY);
 
-        innerY = AddSectionHeader(scrollPanel, "TRY IT IN 30 SECONDS", contentWidth, innerY);
+        innerY = AddSectionHeader(scrollPanel, "TRY IT IN 30 SECONDS", innerY);
         innerY = AddBody(scrollPanel,
             "  1.  Flip a few input switches ON.\n" +
             "  2.  Press LEARN+ to teach the machine that this pattern means YES.\n" +
@@ -224,12 +230,12 @@ public class IntroductionDialog : Form
             contentWidth, innerY);
 
         // --- Further reading (external links) ----------------------------
-        innerY = AddSectionHeader(scrollPanel, "HISTORY & FURTHER READING", contentWidth, innerY);
-        innerY = AddLinkRow(scrollPanel, "Perceptron (Wikipedia)", LINK_WIKI_PERCEPTRON, contentWidth, innerY);
-        innerY = AddLinkRow(scrollPanel, "Frank Rosenblatt (Wikipedia)", LINK_WIKI_ROSENBLATT, contentWidth, innerY);
-        innerY = AddLinkRow(scrollPanel, "The Mark I Perceptron machine", LINK_WIKI_MARK1, contentWidth, innerY);
-        innerY = AddLinkRow(scrollPanel, "Rosenblatt's original 1958 report (PDF)", LINK_ORIGINAL_PAPER, contentWidth, innerY);
-        innerY = AddLinkRow(scrollPanel, "Watch a hardware perceptron being built", LINK_BUILD_VIDEO, contentWidth, innerY);
+        innerY = AddSectionHeader(scrollPanel, "HISTORY & FURTHER READING", innerY);
+        innerY = AddLinkRow(scrollPanel, "Perceptron (Wikipedia)", LINK_WIKI_PERCEPTRON, innerY);
+        innerY = AddLinkRow(scrollPanel, "Frank Rosenblatt (Wikipedia)", LINK_WIKI_ROSENBLATT, innerY);
+        innerY = AddLinkRow(scrollPanel, "The Mark I Perceptron machine", LINK_WIKI_MARK1, innerY);
+        innerY = AddLinkRow(scrollPanel, "Rosenblatt's original 1958 report (PDF)", LINK_ORIGINAL_PAPER, innerY);
+        innerY = AddLinkRow(scrollPanel, "Watch a hardware perceptron being built", LINK_BUILD_VIDEO, innerY);
         innerY += 8;
 
         // --- Open-the-manual button --------------------------------------
@@ -249,7 +255,7 @@ public class IntroductionDialog : Form
         _dontShowAgain.BringToFront();
     }
 
-    private int AddSectionHeader(Panel parent, string text, int width, int y)
+    private int AddSectionHeader(Panel parent, string text, int y)
     {
         var header = CreateTypewriterLabel(text, 11, FontStyle.Bold | FontStyle.Underline);
         header.Location = new Point(30, y + 8);
@@ -273,7 +279,7 @@ public class IntroductionDialog : Form
         return y + body.PreferredHeight + 10;
     }
 
-    private int AddLinkRow(Panel parent, string caption, string url, int width, int y)
+    private int AddLinkRow(Panel parent, string caption, string url, int y)
     {
         var bullet = CreateTypewriterLabel("•", 9, FontStyle.Regular);
         bullet.Location = new Point(30, y);

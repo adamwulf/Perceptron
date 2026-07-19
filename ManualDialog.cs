@@ -1164,6 +1164,14 @@ will share prompts.", 9, FontStyle.Regular);
 
 public class PaperPanel : Panel
 {
+    /// <summary>
+    /// When true (the default), a diagonal "DECLASSIFIED" watermark is drawn
+    /// across the paper — appropriate for the redacted Operator's Manual. Set
+    /// false for friendly, text-heavy pages (e.g. the Welcome dialog) where the
+    /// watermark would sit behind body copy and hurt legibility.
+    /// </summary>
+    public bool ShowWatermark { get; set; } = true;
+
     public PaperPanel()
     {
         SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.DoubleBuffer, true);
@@ -1183,6 +1191,23 @@ public class PaperPanel : Panel
             g.FillRectangle(brush, rand.Next(Width), rand.Next(Height), 1, 1);
         }
 
+        if (ShowWatermark)
+            DrawWatermark(g);
+
+        using var edgeBrush = new SolidBrush(Color.FromArgb(12, 0, 0, 0));
+        g.FillRectangle(edgeBrush, 0, 0, 2, Height);
+        g.FillRectangle(edgeBrush, Width - 2, 0, 2, Height);
+        g.FillRectangle(edgeBrush, 0, 0, Width, 2);
+        g.FillRectangle(edgeBrush, 0, Height - 2, Width, 2);
+
+        using var borderPen = new Pen(Color.FromArgb(180, 175, 165), 1);
+        g.DrawRectangle(borderPen, 0, 0, Width - 1, Height - 1);
+
+        base.OnPaint(e);
+    }
+
+    private void DrawWatermark(Graphics g)
+    {
         // Draw diagonal "DECLASSIFIED" watermark with subtext
         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
         g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
@@ -1210,16 +1235,5 @@ public class PaperPanel : Panel
         g.DrawString(subtextLine2, subtextFont, subtextBrush, -subSize2.Width / 2, mainY + textSize.Height + subSize1.Height - 10);
 
         g.Restore(state);
-
-        using var edgeBrush = new SolidBrush(Color.FromArgb(12, 0, 0, 0));
-        g.FillRectangle(edgeBrush, 0, 0, 2, Height);
-        g.FillRectangle(edgeBrush, Width - 2, 0, 2, Height);
-        g.FillRectangle(edgeBrush, 0, 0, Width, 2);
-        g.FillRectangle(edgeBrush, 0, Height - 2, Width, 2);
-
-        using var borderPen = new Pen(Color.FromArgb(180, 175, 165), 1);
-        g.DrawRectangle(borderPen, 0, 0, Width - 1, Height - 1);
-
-        base.OnPaint(e);
     }
 }
