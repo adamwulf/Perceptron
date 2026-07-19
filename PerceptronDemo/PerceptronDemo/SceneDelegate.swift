@@ -17,9 +17,30 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // straight into the perceptron panel on a black background.
         guard let windowScene = scene as? UIWindowScene else { return }
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = PerceptronPanelViewController()
+        let panel = PerceptronPanelViewController()
+        window.rootViewController = panel
         self.window = window
         window.makeKeyAndVisible()
+
+        // Show the introduction on every launch (not just the first) so a
+        // first-time user always gets context about the machine. Deferred to
+        // the next runloop so the panel is in the window hierarchy first —
+        // presenting straight from willConnectTo, before the panel has
+        // appeared, silently drops the modal.
+        DispatchQueue.main.async { [weak panel] in
+            guard let panel else { return }
+            self.presentIntro(over: panel)
+        }
+    }
+
+    /// Presents the introduction card modally over the panel. On Mac Catalyst
+    /// and iPad this comes up as a centered sheet; on iPhone it's full-screen.
+    private func presentIntro(over panel: UIViewController) {
+        let intro = IntroViewController()
+        intro.modalPresentationStyle = .formSheet
+        intro.modalTransitionStyle = .coverVertical
+        intro.isModalInPresentation = true // require the BEGIN button to dismiss
+        panel.present(intro, animated: true)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
