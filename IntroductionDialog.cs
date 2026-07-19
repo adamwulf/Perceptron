@@ -33,7 +33,7 @@ public class IntroductionDialog : Form
     private bool _isDragging;
     private Point _dragStart;
 
-    /// <summary>Raised when the user clicks the "Read the full Operator's Manual" button.</summary>
+    /// <summary>Raised when the user clicks the "Read the full Manual" button.</summary>
     public event EventHandler? OpenManualRequested;
 
     public IntroductionDialog()
@@ -224,8 +224,8 @@ public class IntroductionDialog : Form
             "the meter learn to separate the two patterns.",
             contentWidth, innerY);
         innerY = AddBody(scrollPanel,
-            "Open THE BRAIN to watch the network think in real time, or the OPERATOR'S " +
-            "MANUAL for the full story — including the different learning rules from " +
+            "Open THE BRAIN to watch the network think in real time, or the full " +
+            "MANUAL for the whole story — including the different learning rules from " +
             "1958 to 1986 and how to build a real one from hardware.",
             contentWidth, innerY);
 

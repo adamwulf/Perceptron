@@ -223,6 +223,9 @@ public class MainForm : Form
             BackColor = Color.Transparent,
             Cursor = Cursors.Hand
         };
+        // Inline fallback position (mirrors videoLink); the Resize handler below
+        // repositions it precisely once the title bar has laid out.
+        aboutLink.Location = new Point(120, (TITLE_BAR_HEIGHT - aboutLink.Height) / 2);
         aboutLink.Click += (s, e) => ShowIntroductionDialog();
         aboutLink.MouseEnter += (s, e) => aboutLink.ForeColor = Color.FromArgb(255, 220, 120);
         aboutLink.MouseLeave += (s, e) => aboutLink.ForeColor = Color.FromArgb(200, 180, 110);
@@ -325,18 +328,25 @@ public class MainForm : Form
 
     private void ShowIntroductionDialog()
     {
-        using var intro = new IntroductionDialog();
-        intro.OpenManualRequested += (s, e) =>
+        bool openManual = false;
+        using (var intro = new IntroductionDialog())
+        {
+            // Record the intent; the intro closes itself, then we open the
+            // manual once its ShowDialog returns so the two don't stack.
+            intro.OpenManualRequested += (s, e) => openManual = true;
+            intro.ShowDialog(this);
+
+            // Honor "Don't show this on startup" only when the user opted in;
+            // never un-suppress once they've asked us to stop.
+            if (intro.SuppressOnStartup)
+                IntroductionDialog.MarkShown();
+        }
+
+        if (openManual)
         {
             using var manual = new ManualDialog();
             manual.ShowDialog(this);
-        };
-        intro.ShowDialog(this);
-
-        // Honor "Don't show this on startup" only when the user opted in;
-        // never un-suppress once they've asked us to stop.
-        if (intro.SuppressOnStartup)
-            IntroductionDialog.MarkShown();
+        }
     }
 
     private void MainPanel_Resize(object? sender, EventArgs e)
