@@ -211,18 +211,41 @@ public class MainForm : Form
         videoLink.MouseEnter += (s, e) => videoLink.ForeColor = Color.FromArgb(150, 255, 150);
         videoLink.MouseLeave += (s, e) => videoLink.ForeColor = Color.FromArgb(100, 180, 100);
 
+        // Intro / About link — re-opens the welcome & explanation dialog.
+        // Amber tint (matching the Manual/Brain button glow) reads as an
+        // interactive affordance rather than dim static text.
+        var aboutLink = new Label
+        {
+            Text = "ⓘ About",
+            ForeColor = Color.FromArgb(200, 180, 110),
+            Font = new Font("Consolas", 8f, FontStyle.Bold),
+            AutoSize = true,
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        // Inline fallback position (mirrors videoLink); the Resize handler below
+        // repositions it precisely once the title bar has laid out.
+        aboutLink.Location = new Point(120, (TITLE_BAR_HEIGHT - aboutLink.Height) / 2);
+        aboutLink.Click += (s, e) => ShowIntroductionDialog();
+        aboutLink.MouseEnter += (s, e) => aboutLink.ForeColor = Color.FromArgb(255, 220, 120);
+        aboutLink.MouseLeave += (s, e) => aboutLink.ForeColor = Color.FromArgb(200, 180, 110);
+        _toolTip.SetToolTip(aboutLink, "What is this machine? Show the introduction.");
+
         _titleBar.Controls.Add(_closeButton);
         _titleBar.Controls.Add(videoLink);
+        _titleBar.Controls.Add(aboutLink);
         _titleBar.Controls.Add(_titleLabel);
 
         Controls.Add(_titleBar);
 
-        // Position title label centered, align video link vertically
+        // Position title label centered, align video + about links vertically
         _titleBar.Resize += (s, e) =>
         {
             int titleY = (TITLE_BAR_HEIGHT - _titleLabel.Height) / 2;
             _titleLabel.Location = new Point((_titleBar.Width - _titleLabel.Width) / 2, titleY);
-            videoLink.Location = new Point(8, titleY + _titleLabel.Height - videoLink.Height);
+            int linkY = titleY + _titleLabel.Height - videoLink.Height;
+            videoLink.Location = new Point(8, linkY);
+            aboutLink.Location = new Point(videoLink.Right + 14, linkY);
         };
     }
 
@@ -292,6 +315,38 @@ public class MainForm : Form
     {
         // If you want the program to start with the control panel collapsed, uncomment this line:
         // _settingsToggle.Toggle();
+
+        // On the very first launch, welcome the operator with an explanation of
+        // what this machine is and how it learns. Re-openable any time via the
+        // "ⓘ About" link in the title bar.
+        if (IntroductionDialog.ShouldShowOnStartup())
+        {
+            // Defer until the form is fully shown so the dialog centers correctly.
+            BeginInvoke(new Action(ShowIntroductionDialog));
+        }
+    }
+
+    private void ShowIntroductionDialog()
+    {
+        bool openManual = false;
+        using (var intro = new IntroductionDialog())
+        {
+            // Record the intent; the intro closes itself, then we open the
+            // manual once its ShowDialog returns so the two don't stack.
+            intro.OpenManualRequested += (s, e) => openManual = true;
+            intro.ShowDialog(this);
+
+            // Honor "Don't show this on startup" only when the user opted in;
+            // never un-suppress once they've asked us to stop.
+            if (intro.SuppressOnStartup)
+                IntroductionDialog.MarkShown();
+        }
+
+        if (openManual)
+        {
+            using var manual = new ManualDialog();
+            manual.ShowDialog(this);
+        }
     }
 
     private void MainPanel_Resize(object? sender, EventArgs e)
