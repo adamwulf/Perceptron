@@ -228,16 +228,14 @@ final class IntroViewController: UIViewController {
         }
     }
 
-    /// A single control illustration: a centered, aspect-fit screenshot of the
-    /// real control, then a bold title and a description beneath it.
+    /// A single control illustration: a bold title and a description, then a
+    /// centered, aspect-fit screenshot of the real control beneath them.
     private func addIllustratedItem(image name: String, imageHeight: CGFloat,
                                     title: String, detail: String) {
         let item = UIStackView()
         item.axis = .vertical
         item.alignment = .fill
         item.spacing = 8
-
-        item.addArrangedSubview(centered(makeTutorialImageView(name, height: imageHeight)))
 
         let titleLabel = UILabel()
         titleLabel.text = title
@@ -247,11 +245,12 @@ final class IntroViewController: UIViewController {
         item.addArrangedSubview(titleLabel)
 
         item.addArrangedSubview(makeDetailLabel(detail))
+        item.addArrangedSubview(centered(makeTutorialImageView(name, height: imageHeight)))
         contentStack.addArrangedSubview(item)
     }
 
     /// Two equally-sized small controls shown side by side (BIAS + RATE), each
-    /// with a caption beneath it, then a shared description. The pair is
+    /// with a caption beneath it, beneath a shared description. The pair is
     /// centered as a unit and the two images share one width so they always
     /// match, mirroring how they sit on the panel.
     private func addPairedItem(leftImage: String, leftCaption: String,
@@ -270,7 +269,7 @@ final class IntroViewController: UIViewController {
         row.distribution = .fillEqually
         row.spacing = 24
 
-        let item = UIStackView(arrangedSubviews: [centered(row), makeDetailLabel(detail)])
+        let item = UIStackView(arrangedSubviews: [makeDetailLabel(detail), centered(row)])
         item.axis = .vertical
         item.alignment = .fill
         item.spacing = 8
