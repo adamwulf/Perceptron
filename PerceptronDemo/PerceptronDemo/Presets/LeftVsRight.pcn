@@ -1,0 +1,41 @@
+{
+  "bias" : 10,
+  "gridSize" : 4,
+  "learningRate" : 10,
+  "switchStates" : [
+    true,
+    true,
+    false,
+    false,
+    true,
+    true,
+    false,
+    false,
+    true,
+    true,
+    false,
+    false,
+    true,
+    true,
+    false,
+    false
+  ],
+  "weights" : [
+    10,
+    10,
+    -10,
+    -10,
+    10,
+    10,
+    -10,
+    -10,
+    10,
+    10,
+    -10,
+    -10,
+    10,
+    10,
+    -10,
+    -10
+  ]
+}
