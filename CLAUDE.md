@@ -4,11 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **Mark I Perceptron Simulator** - a Windows Forms application that recreates Frank Rosenblatt's 1958 perceptron machine with a vintage 1950s industrial aesthetic. The UI features 12 custom-drawn controls designed to look like physical hardware: toggle switches with LEDs, rotary knobs, analog meters, and backlit mechanical buttons.
+This is a **Mark I Perceptron Simulator** that recreates Frank Rosenblatt's 1958 perceptron machine with a vintage 1950s industrial aesthetic. The UI features custom-drawn controls designed to look like physical hardware: toggle switches with LEDs, rotary knobs, analog meters, and backlit mechanical buttons.
 
-**Key Insight**: This program contains its own DNA — the complete prompts used to generate the codebase are embedded as resources. Feed `resources/complete_prompt.txt` into Claude Code to recreate the entire application.
+The repository contains **two implementations** of the simulator:
+
+1. **Windows Forms desktop app** (repo root, C# / .NET) — the original and most complete version. Everything in this document *below the iOS section* refers to this app unless stated otherwise.
+2. **iOS / iPadOS / Mac Catalyst app** (`PerceptronDemo/`, Swift / UIKit) — a native port of the panel UI. See the [iOS App (PerceptronDemo)](#ios-app-perceptrondemo) section for its architecture, build commands, and how it differs from the desktop app.
+
+Both share the same visual language and the same core perceptron math; the C# app is the source of truth that the Swift app is ported from.
+
+**Key Insight**: The desktop program contains its own DNA — the complete prompts used to generate the codebase are embedded as resources. Feed `resources/complete_prompt.txt` into Claude Code to recreate the entire application.
 
 ## Build Commands
+
+### Desktop (Windows Forms, C#)
 
 ```bash
 # Build debug
@@ -22,7 +31,124 @@ dotnet publish -p:PublishProfile=SingleFileRelease
 # Or use: publish.bat
 ```
 
+### iOS / iPadOS / Mac Catalyst (Swift, UIKit)
+
+The iOS app lives in `PerceptronDemo/` and builds with Xcode. Per the repo
+guidance, build into a local DerivedData folder so package checkouts stay local.
+
+**The app target is iPad-only** (`TARGETED_DEVICE_FAMILY = 2`), so use an **iPad**
+simulator (or Mac Catalyst) — iPhone destinations are ineligible.
+
+```bash
+# Build for the iPad Simulator
+xcodebuild -project PerceptronDemo/PerceptronDemo.xcodeproj \
+  -scheme PerceptronDemo \
+  -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=26.2' \
+  -derivedDataPath PerceptronDemo/DerivedData build
+
+# Run tests
+xcodebuild -project PerceptronDemo/PerceptronDemo.xcodeproj \
+  -scheme PerceptronDemo \
+  -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=26.2' \
+  -derivedDataPath PerceptronDemo/DerivedData test
+```
+
+Or open `PerceptronDemo/PerceptronDemo.xcodeproj` in Xcode and run. The app also
+runs as a **Mac Catalyst** target. See the [iOS App](#ios-app-perceptrondemo)
+section for details.
+
+## iOS App (PerceptronDemo)
+
+A native **UIKit** port of the perceptron panel, targeting **iPadOS 26.2+**
+and **Mac Catalyst** (`SUPPORTS_MACCATALYST = YES`, app target
+`TARGETED_DEVICE_FAMILY = 2` — iPad only, so iPhone simulators are ineligible;
+Swift 5.0). It lives entirely under `PerceptronDemo/` and is a separate Xcode
+project — it does **not** share code with the C# app, but mirrors its look and its
+core math. The UI is built **programmatically** (no storyboard for the main
+screen); `Main` storyboard usage is replaced by `SceneDelegate` wiring.
+
+### Structure
+
+```
+PerceptronDemo/
+  PerceptronDemo/
+    AppDelegate.swift              # Standard UIKit app delegate + scene config
+    SceneDelegate.swift            # Builds the window, presents the intro on launch
+    ViewController.swift           # Empty template VC (not used by the running app)
+    PerceptronPanelViewController.swift  # The main instrument panel
+    IntroViewController.swift      # Launch "briefing card" / About screen
+    Engine/
+      PerceptronEngine.swift       # Ported neural-network logic (classic 1958 rule)
+    Controls/                      # Owner-drawn UIViews mirroring the desktop controls
+      SwitchControl.swift          # Toggle switch + LED (isOn, value +1/-1)
+      KnobControl.swift            # Rotary dial (value, minValue/maxValue -30…30, step 0.05)
+      ArrowButton.swift            # Triangular d-pad button (direction, arrowSize, arrowCenter)
+      PushButton.swift             # Backlit mechanical button (labelText, glowColor, isSquare, onTap)
+      AnalogMeterControl.swift     # Vintage needle gauge (value -100…100)
+      OutputLedControl.swift       # Large output LED (isOn, label)
+      MetalPlateView.swift         # Multi-line instruction plate (lines) + MetalLabelView (text)
+    Assets.xcassets/               # App icon, accent color, Tutorial* screenshots (intro)
+    Base.lproj/LaunchScreen.storyboard
+  PerceptronDemoTests/             # Unit tests
+  PerceptronDemoUITests/           # UI tests (launch with -skipIntro to bypass the intro)
+  ci_scripts/                      # Xcode Cloud pre/post build hooks
+```
+
+### Key Components
+
+- **SceneDelegate.swift** — Builds the `UIWindow` programmatically with a
+  `PerceptronPanelViewController` root, then presents `IntroViewController` as a
+  modal on **every launch** (deferred to the next runloop so the panel is in the
+  hierarchy first). UI tests pass the `-skipIntro` launch argument to reach the
+  panel directly.
+- **PerceptronPanelViewController.swift** (~414 LOC) — The main screen. Three
+  columns laid out manually in `viewDidLayoutSubviews` → `layoutPanel()`:
+  switches + d-pad (left), weight knobs + BIAS/RATE (center), meter + LED +
+  plates (right). A **LEARN + / RESET / LEARN −** button strip sits along the
+  bottom. Fixed **4×4 grid** (`gridSize = 4`).
+- **IntroViewController.swift** (~457 LOC) — The launch "briefing card": what the
+  machine does, 1958 history, an illustrated panel inventory (using the
+  `Tutorial*` imageset screenshots), and Wikipedia / video links, all in a scroll
+  view. Dismissed with a backlit **BEGIN** button (`isModalInPresentation = true`
+  so it can't be swiped away). This is also the natural target for an **About**
+  action from the panel.
+- **PerceptronEngine.swift** (~84 LOC) — Ports only the **classic 1958 Rosenblatt
+  rule** (`OUTPUT = Σ(input × weight) + bias`). `weights` is `private(set)`;
+  mutate via `setWeight(_:_:)` / `learn(_:desiredPositive:)` / `resetWeights()`.
+  Switch inputs are +1 (ON) / −1 (OFF); weights & bias clamp to −30…30; default
+  `learningRate = 10.0`. A `Comparable.clamped(to:)` extension matches C#'s
+  `Math.Clamp`.
+
+### Differences From the Desktop App
+
+The iOS app is an intentionally **scoped-down** port. Notable differences:
+
+| Feature | Desktop (C#) | iOS (Swift) |
+|---------|--------------|-------------|
+| Grid size | 1–10, adjustable + linear mode | Fixed 4×4 |
+| Math rules | 7 rules (1958–1986), Math dial | Classic 1958 only |
+| Save / Load | `.pcn` JSON files (SAVE/LOAD buttons) | `.pcn` JSON files via gear-menu (document picker) |
+| Manual / Brain / Make dialogs | Present | Not ported |
+| Intro / About | None (Manual has Credits/About page) | Full intro card on every launch |
+| Teletype / debug output | PrinterDialog | Not ported |
+
+### Conventions
+
+- **Controls are owner-drawn `UIView` subclasses** using Core Graphics in
+  `draw(_:)`, each exposing a small property/closure API (`onValueChanged`,
+  `onTap`, etc.) rather than target/action. Follow this pattern for new controls.
+- **Layout is manual** (frame-based in `viewDidLayoutSubviews`), not Auto Layout,
+  for the panel — mirroring the desktop's absolute positioning. The intro screen
+  *does* use Auto Layout (it's a scrollable document).
+- **Palette** is duplicated as a private `Palette` enum where needed and should
+  match the desktop color reference (black chassis, olive-grey brushed plates,
+  engraved monospaced text, backlit glows).
+
 ## Architecture
+
+> The rest of this document describes the **Windows Forms desktop app** (C#).
+> For the Swift/UIKit app, see [iOS App (PerceptronDemo)](#ios-app-perceptrondemo)
+> above.
 
 ### Core Components
 
