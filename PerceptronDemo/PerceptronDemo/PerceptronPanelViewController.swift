@@ -9,6 +9,7 @@
 //
 
 import UIKit
+import UniformTypeIdentifiers
 
 final class PerceptronPanelViewController: UIViewController {
 
@@ -42,6 +43,9 @@ final class PerceptronPanelViewController: UIViewController {
     private let resetButton = PushButton()
     private let rateKnob = KnobControl()
     private let rateLabel = MetalLabelView()
+
+    // Gear button (top-right) opens a Save / Load / About menu.
+    private let gearButton = UIButton(type: .system)
 
     // MARK: - Lifecycle
 
@@ -170,6 +174,76 @@ final class PerceptronPanelViewController: UIViewController {
 
         rateLabel.text = "RATE"
         view.addSubview(rateLabel)
+
+        buildGearButton()
+    }
+
+    /// A small circular gear button pinned to the top-right corner. Tapping it
+    /// pops a menu with Save / Load / About — keeping the crowded bottom
+    /// Learn/Reset strip untouched. Styled dark to match the chassis.
+    private func buildGearButton() {
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(
+            systemName: "gearshape.fill",
+            withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .regular))
+        config.baseForegroundColor = UIColor(white: 150/255, alpha: 1)
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+        gearButton.configuration = config
+        gearButton.accessibilityLabel = "Settings"
+        gearButton.showsMenuAsPrimaryAction = true
+        gearButton.menu = makeGearMenu()
+        gearButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(gearButton)
+
+        NSLayoutConstraint.activate([
+            gearButton.trailingAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
+            gearButton.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
+        ])
+    }
+
+    private func makeGearMenu() -> UIMenu {
+        let save = UIAction(title: "Save…",
+                            image: UIImage(systemName: "square.and.arrow.down")) { [weak self] _ in
+            self?.presentSave()
+        }
+        let load = UIAction(title: "Load…",
+                            image: UIImage(systemName: "square.and.arrow.up")) { [weak self] _ in
+            self?.presentLoad()
+        }
+        let about = UIAction(title: "About",
+                             image: UIImage(systemName: "info.circle")) { [weak self] _ in
+            self?.presentAbout()
+        }
+
+        // "Load Example ▸" — a submenu of bundled, pre-trained networks. Each
+        // item loads its `.pcn` directly (no picker).
+        let exampleActions = Preset.singleLayerCases.map { preset in
+            UIAction(title: preset.menuTitle,
+                     image: UIImage(systemName: preset.symbolName)) { [weak self] _ in
+                self?.loadPreset(preset)
+            }
+        }
+        let examples = UIMenu(title: "Load Example",
+                              image: UIImage(systemName: "square.stack.3d.up"),
+                              children: exampleActions)
+
+        // The second screen: the multi-layer "signal flow" patch panel, which
+        // can detect a shape anywhere in the grid (the single-layer panel can't).
+        let signalFlow = UIAction(title: "Signal Flow (1986)",
+                                  image: UIImage(systemName: "point.3.filled.connected.trianglepath.dotted")) { [weak self] _ in
+            self?.presentSignalFlow()
+        }
+
+        return UIMenu(children: [signalFlow, examples, save, load, about])
+    }
+
+    private func presentSignalFlow() {
+        let vc = SignalFlowViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.modalTransitionStyle = .coverVertical
+        present(vc, animated: true)
     }
 
     // MARK: - Layout
@@ -410,5 +484,142 @@ final class PerceptronPanelViewController: UIViewController {
             sw.isOn = newGrid[i / gridSize][i % gridSize]
         }
         updateOutput()
+    }
+
+    // MARK: - Save / Load / About
+
+    // `PerceptronSnapshot` and the file extension live in PerceptronSnapshot.swift
+    // so the loader, the Save/Load flow, and the preset-generator test all share
+    // one definition.
+
+    private func currentSnapshot() -> PerceptronSnapshot {
+        PerceptronSnapshot(
+            gridSize: gridSize,
+            weights: engine.weights,
+            bias: engine.bias,
+            learningRate: engine.learningRate,
+            switchStates: switches.map { $0.isOn })
+    }
+
+    /// Serializes the current state to a temp `.pcn` file and presents the
+    /// system export picker so the user can save it anywhere (Files, iCloud,
+    /// etc.). Works on iPhone, iPad, and Mac Catalyst.
+    private func presentSave() {
+        let snapshot = currentSnapshot()
+        do {
+            let data = try snapshot.jsonData()
+
+            let filename = "perceptron_settings.\(PerceptronSnapshot.fileExtension)"
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+            try data.write(to: url, options: .atomic)
+
+            let picker = UIDocumentPickerViewController(forExporting: [url], asCopy: true)
+            picker.delegate = self
+            present(picker, animated: true)
+        } catch {
+            presentError("Could not save settings.", error)
+        }
+    }
+
+    /// Presents the system import picker; the chosen file is decoded in
+    /// `documentPicker(_:didPickDocumentsAt:)`.
+    private func presentLoad() {
+        // A `.pcn` file is JSON with a custom extension. We deliberately don't
+        // register a UTI (keeps Info.plist untouched), so `.pcn` has no declared
+        // type and `UTType(filenameExtension:)` returns nil. Accepting `.json`
+        // *and* `.data` means both plain `.json` files and our unregistered
+        // `.pcn` files are selectable in the picker. The actual content is
+        // validated on decode.
+        var types: [UTType] = [.json, .data]
+        if let pcn = UTType(filenameExtension: PerceptronSnapshot.fileExtension) {
+            types.insert(pcn, at: 0)
+        }
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: types)
+        picker.delegate = self
+        picker.allowsMultipleSelection = false
+        present(picker, animated: true)
+    }
+
+    /// Presents the launch intro card as an About screen, matching how
+    /// `SceneDelegate` presents it on launch.
+    private func presentAbout() {
+        let intro = IntroViewController()
+        intro.modalPresentationStyle = .formSheet
+        intro.modalTransitionStyle = .coverVertical
+        intro.isModalInPresentation = true // require the BEGIN button to dismiss
+        present(intro, animated: true)
+    }
+
+    /// Decodes a snapshot and pushes it into the engine and every on-screen
+    /// control. This grid is a fixed 4×4, so a file saved from a different grid
+    /// size is rejected rather than partially applied.
+    private func applySnapshot(_ snapshot: PerceptronSnapshot) {
+        guard snapshot.gridSize == gridSize else {
+            presentError(
+                "This file was saved for a \(snapshot.gridSize)×\(snapshot.gridSize) grid, "
+                + "but this app uses a \(gridSize)×\(gridSize) grid.", nil)
+            return
+        }
+
+        // Weights → engine + knobs.
+        for i in 0..<nodeCount where i < snapshot.weights.count {
+            engine.setWeight(i, snapshot.weights[i])
+            if i < knobs.count { knobs[i].value = engine.weight(at: i) }
+        }
+
+        // Bias and rate.
+        engine.bias = snapshot.bias.clamped(to: -30...30)
+        biasKnob.value = engine.bias
+        engine.learningRate = snapshot.learningRate
+        rateKnob.value = snapshot.learningRate
+
+        // Switch pattern.
+        for (i, sw) in switches.enumerated() where i < snapshot.switchStates.count {
+            sw.isOn = snapshot.switchStates[i]
+        }
+
+        updateOutput()
+    }
+
+    private func loadSnapshot(from url: URL) {
+        // Files returned by the picker are security-scoped on iOS.
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let snapshot = try PerceptronSnapshot.decode(from: data)
+            applySnapshot(snapshot)
+        } catch {
+            presentError("Could not load settings — the file may be invalid.", error)
+        }
+    }
+
+    /// Loads a bundled pre-trained example straight into the panel — no document
+    /// picker. Backed by a `.pcn` file generated by `PresetGeneratorTests`.
+    private func loadPreset(_ preset: Preset) {
+        guard let snapshot = preset.loadSnapshot() else {
+            presentError("Example \"\(preset.menuTitle)\" is unavailable.", nil)
+            return
+        }
+        applySnapshot(snapshot)
+    }
+
+    private func presentError(_ message: String, _ error: Error?) {
+        let detail = error.map { " (\($0.localizedDescription))" } ?? ""
+        let alert = UIAlertController(
+            title: "Error", message: message + detail, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+}
+
+// MARK: - UIDocumentPickerDelegate
+
+extension PerceptronPanelViewController: UIDocumentPickerDelegate {
+    func documentPicker(_ controller: UIDocumentPickerViewController,
+                        didPickDocumentsAt urls: [URL]) {
+        guard controller.documentPickerMode == .open, let url = urls.first else { return }
+        loadSnapshot(from: url)
     }
 }

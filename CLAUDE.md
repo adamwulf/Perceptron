@@ -4,11 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **Mark I Perceptron Simulator** - a Windows Forms application that recreates Frank Rosenblatt's 1958 perceptron machine with a vintage 1950s industrial aesthetic. The UI features 12 custom-drawn controls designed to look like physical hardware: toggle switches with LEDs, rotary knobs, analog meters, and backlit mechanical buttons.
+This is a **Mark I Perceptron Simulator** that recreates Frank Rosenblatt's 1958 perceptron machine with a vintage 1950s industrial aesthetic. The UI features custom-drawn controls designed to look like physical hardware: toggle switches with LEDs, rotary knobs, analog meters, and backlit mechanical buttons.
 
-**Key Insight**: This program contains its own DNA — the complete prompts used to generate the codebase are embedded as resources. Feed `resources/complete_prompt.txt` into Claude Code to recreate the entire application.
+The repository contains **two implementations** of the simulator:
+
+1. **Windows Forms desktop app** (repo root, C# / .NET) — the original and most complete version. Everything in this document *below the iOS section* refers to this app unless stated otherwise.
+2. **iOS / iPadOS / Mac Catalyst app** (`PerceptronDemo/`, Swift / UIKit) — a native port of the panel UI. See the [iOS App (PerceptronDemo)](#ios-app-perceptrondemo) section for its architecture, build commands, and how it differs from the desktop app.
+
+Both share the same visual language and the same core perceptron math; the C# app is the source of truth that the Swift app is ported from.
+
+**Key Insight**: The desktop program contains its own DNA — the complete prompts used to generate the codebase are embedded as resources. Feed `resources/complete_prompt.txt` into Claude Code to recreate the entire application.
 
 ## Build Commands
+
+### Desktop (Windows Forms, C#)
 
 ```bash
 # Build debug
@@ -22,7 +31,222 @@ dotnet publish -p:PublishProfile=SingleFileRelease
 # Or use: publish.bat
 ```
 
+### iOS / iPadOS / Mac Catalyst (Swift, UIKit)
+
+The iOS app lives in `PerceptronDemo/` and builds with Xcode. Per the repo
+guidance, build into a local DerivedData folder so package checkouts stay local.
+
+**The app target is iPad-only** (`TARGETED_DEVICE_FAMILY = 2`), so use an **iPad**
+simulator (or Mac Catalyst) — iPhone destinations are ineligible.
+
+```bash
+# Build for the iPad Simulator
+xcodebuild -project PerceptronDemo/PerceptronDemo.xcodeproj \
+  -scheme PerceptronDemo \
+  -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=26.2' \
+  -derivedDataPath PerceptronDemo/DerivedData build
+
+# Run tests
+xcodebuild -project PerceptronDemo/PerceptronDemo.xcodeproj \
+  -scheme PerceptronDemo \
+  -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=26.2' \
+  -derivedDataPath PerceptronDemo/DerivedData test
+```
+
+Or open `PerceptronDemo/PerceptronDemo.xcodeproj` in Xcode and run. The app also
+runs as a **Mac Catalyst** target. See the [iOS App](#ios-app-perceptrondemo)
+section for details.
+
+## iOS App (PerceptronDemo)
+
+A native **UIKit** port of the perceptron panel, targeting **iPadOS 26.2+**
+and **Mac Catalyst** (`SUPPORTS_MACCATALYST = YES`, app target
+`TARGETED_DEVICE_FAMILY = 2` — iPad only, so iPhone simulators are ineligible;
+Swift 5.0). It lives entirely under `PerceptronDemo/` and is a separate Xcode
+project — it does **not** share code with the C# app, but mirrors its look and its
+core math. The UI is built **programmatically** (no storyboard for the main
+screen); `Main` storyboard usage is replaced by `SceneDelegate` wiring.
+
+### Structure
+
+```
+PerceptronDemo/
+  PerceptronDemo/
+    AppDelegate.swift              # Standard UIKit app delegate + scene config
+    SceneDelegate.swift            # Builds the window, presents the intro on launch
+    ViewController.swift           # Empty template VC (not used by the running app)
+    PerceptronPanelViewController.swift  # The main instrument panel + gear menu
+    SignalFlowViewController.swift # 2nd screen: multi-layer "patch panel" (1986)
+    IntroViewController.swift      # Launch "briefing card" / About screen
+    PerceptronSnapshot.swift       # Codable panel state (.pcn) + Preset catalog
+    Engine/
+      PerceptronEngine.swift       # Single-layer (classic 1958 rule)
+      MLPEngine.swift              # Multi-layer 16→6→1 (1986 backprop, ReLU)
+    Controls/                      # Owner-drawn UIViews mirroring the desktop controls
+      SwitchControl.swift          # Toggle switch + LED (isOn, value +1/-1)
+      KnobControl.swift            # Rotary dial (value, minValue/maxValue -30…30, step 0.05)
+      ArrowButton.swift            # Triangular d-pad button (direction, arrowSize, arrowCenter)
+      PushButton.swift             # Backlit mechanical button (labelText, glowColor, isSquare, onTap)
+      AnalogMeterControl.swift     # Vintage needle gauge (value -100…100)
+      OutputLedControl.swift       # Large output LED (isOn, label)
+      NetworkView.swift            # Signal-flow diagram: bulbs (neurons) + wires (weights)
+      MetalPlateView.swift         # Multi-line instruction plate (lines) + MetalLabelView (text)
+    Presets/                       # Bundled, pre-trained example networks (*.pcn)
+    Scripts/
+      generate_presets.swift       # Host tool that trains + WRITES the Presets/*.pcn
+    Assets.xcassets/               # App icon, accent color, Tutorial* screenshots (intro)
+    Base.lproj/LaunchScreen.storyboard
+  PerceptronDemoTests/             # Unit tests
+    PerceptronDemoTests.swift      # Single-layer engine tests (pinned to the C# reference)
+    MLPEngineTests.swift           # Multi-layer engine + "learns a moving T" proof
+    TPatternData.swift             # Shared T-detection training set (tests + generator)
+    PresetGeneratorTests.swift     # PROVES each preset trains (does not write files)
+  PerceptronDemoUITests/           # UI tests (launch with -skipIntro to bypass the intro)
+  ci_scripts/                      # Xcode Cloud pre/post build hooks
+```
+
+> **Note:** The Xcode project uses **file-system-synchronized groups**
+> (`PBXFileSystemSynchronizedRootGroup`) for the app and test folders, so new
+> files added under `PerceptronDemo/`, `PerceptronDemoTests/`, etc. are picked up
+> automatically — no `project.pbxproj` editing needed. Unknown types like `.pcn`
+> are bundled as resources.
+
+### Key Components
+
+- **SceneDelegate.swift** — Builds the `UIWindow` programmatically with a
+  `PerceptronPanelViewController` root, then presents `IntroViewController` as a
+  modal on **every launch** (deferred to the next runloop so the panel is in the
+  hierarchy first). UI tests pass the `-skipIntro` launch argument to reach the
+  panel directly.
+- **PerceptronPanelViewController.swift** (~414 LOC) — The main screen. Three
+  columns laid out manually in `viewDidLayoutSubviews` → `layoutPanel()`:
+  switches + d-pad (left), weight knobs + BIAS/RATE (center), meter + LED +
+  plates (right). A **LEARN + / RESET / LEARN −** button strip sits along the
+  bottom. Fixed **4×4 grid** (`gridSize = 4`).
+- **IntroViewController.swift** (~457 LOC) — The launch "briefing card": what the
+  machine does, 1958 history, an illustrated panel inventory (using the
+  `Tutorial*` imageset screenshots), and Wikipedia / video links, all in a scroll
+  view. Dismissed with a backlit **BEGIN** button (`isModalInPresentation = true`
+  so it can't be swiped away). This is also the natural target for an **About**
+  action from the panel.
+- **PerceptronEngine.swift** (~84 LOC) — Ports only the **classic 1958 Rosenblatt
+  rule** (`OUTPUT = Σ(input × weight) + bias`). `weights` is `private(set)`;
+  mutate via `setWeight(_:_:)` / `learn(_:desiredPositive:)` / `resetWeights()`.
+  Switch inputs are +1 (ON) / −1 (OFF); weights & bias clamp to −30…30; default
+  `learningRate = 10.0`. A `Comparable.clamped(to:)` extension matches C#'s
+  `Math.Clamp`.
+
+### Gear Menu — Save / Load / Examples / About
+
+The panel has a **gear button** (top-right) whose menu offers:
+
+- **Save…** — serializes the full panel state to a `.pcn` file (JSON) and presents
+  the system **export** document picker.
+- **Load…** — presents the **import** document picker; the chosen file is decoded
+  and pushed back into the engine and every control. Grid-size mismatches and
+  invalid files are rejected with an alert (never partially applied).
+- **Load Example ▸** — a submenu of bundled, pre-trained **single-layer** networks.
+  Each item loads its `.pcn` directly (no picker).
+- **Signal Flow (1986)** — opens the second screen (below).
+- **About** — presents the same `IntroViewController` shown on launch.
+
+**Snapshot / preset machinery** (`PerceptronSnapshot.swift`):
+
+- `PerceptronSnapshot` — `Codable` state: `gridSize`, `weights`, `bias`,
+  `learningRate`, `switchStates`, plus an optional `mlp` payload
+  (`hiddenCount` / `hiddenWeights` / `hiddenBiases` / `outputWeights`) that is
+  present only for multi-layer presets and `nil` for single-layer ones (so old
+  files stay valid). `.fileExtension` is `"pcn"`; `jsonData()` emits
+  pretty-printed, key-sorted JSON so regenerated presets diff cleanly.
+- `Preset` — a `CaseIterable` enum cataloging the bundled examples. Each case has
+  a `kind` (`.singleLayer` / `.multiLayer`); use `Preset.singleLayerCases` /
+  `Preset.multiLayerCases` to pick the right set per screen. `loadSnapshot(from:)`
+  reads and decodes the bundled `<rawValue>.pcn`.
+
+**Presets are generated by a host script, and PROVEN by tests** — an important
+two-part split forced by the sandbox:
+
+- **Writing:** `PerceptronDemo/Scripts/generate_presets.swift` is a standalone
+  `swift` tool (no Xcode/simulator). Run it to (re)generate every `.pcn`:
+  ```bash
+  swift PerceptronDemo/Scripts/generate_presets.swift
+  ```
+  It trains each network from scratch, asserts correct classification (exits
+  non-zero otherwise), and writes `PerceptronDemo/Presets/*.pcn`.
+  **Why a script and not the test:** the XCTest process is **sandboxed** on both
+  the iOS Simulator and the Mac Catalyst host, so a test's `write(to:)` into the
+  source tree is silently redirected into a container and never lands. The script
+  runs unsandboxed and *can* write the repo. It uses the **same** engine/training
+  logic as the app, so its output behaves identically when loaded.
+- **Proving:** `PresetGeneratorTests` / `MLPEngineTests` re-train the same
+  networks in-memory and assert they converge and classify correctly. They do
+  **not** write files; they also cross-check that the bundled `.pcn` matches the
+  expected dimensions, so an out-of-date file (training set changed but the
+  script wasn't re-run) is caught.
+- **Constraint:** the single-layer examples must be **linearly separable** (no
+  XOR-style patterns) or their convergence assertion fails. Position-invariant
+  shape detection (the moving T) needs the multi-layer `MLPEngine`.
+
+### Second Screen — Signal Flow (multi-layer, 1986)
+
+`SignalFlowViewController` presents the network as an **illuminated patch panel**
+backed by `MLPEngine` (a `16 → 6 → 1` multi-layer perceptron). Left→right:
+input switch grid → input bulbs → weight-wires → 6 hidden bulbs → output bulb +
+meter/LED. It opens on the bundled, pre-trained **"T Anywhere"** preset, which
+detects a T shape *at any position* in the grid — something the single-layer
+panel provably cannot do.
+
+- **`MLPEngine.swift`** — ReLU hidden layer + backprop, ported from the desktop
+  `BACKPROP` rule but generalized so `hiddenCount` is independent of
+  `inputCount`. `learn(_:desiredPositive:)` is the sign-gated live rule (for the
+  LEARN buttons); `trainStep(_:desiredPositive:margin:)` keeps pushing to a
+  margin (used offline by the generator to avoid a fragile boundary). Weights
+  seed deterministically (a fixed LCG) so training is reproducible; the seed
+  spread deliberately **breaks symmetry** so the 6 hidden units specialize
+  instead of collapsing into one saturated detector.
+- **`NetworkView.swift`** — owner-drawn: **bulbs** = neurons (brightness =
+  activation), **wires** = weights (thickness = |weight|, colour = sign
+  (amber +, blue −), glow = live signal = |weight|·source-activation). Wires and
+  neurons are **display-only**; training is via LEARN +/− or a loaded preset.
+- **Why 6 hidden nodes, not 4:** 4 ReLU units do **not** converge on the moving-T
+  with this rule; 6 do. `MLPEngineTests.learnsTranslationInvariantT` pins this
+  (it *is* the app's lesson — more neurons = more capacity). If you add a
+  multi-layer preset, keep it linearly separable *after* the hidden layer or add
+  capacity until it converges.
+
+### Differences From the Desktop App
+
+The iOS app is an intentionally **scoped-down** port. Notable differences:
+
+| Feature | Desktop (C#) | iOS (Swift) |
+|---------|--------------|-------------|
+| Grid size | 1–10, adjustable + linear mode | Fixed 4×4 |
+| Math rules | 7 rules (1958–1986), Math dial | Classic 1958 (main panel) + 1986 MLP (Signal Flow screen) |
+| Multi-layer / backprop | 1986 rule + BRAIN node graph | `MLPEngine` 16→6→1 + Signal Flow patch-panel view |
+| Position-invariant shapes | (n/a) | "T Anywhere" preset on the Signal Flow screen |
+| Save / Load | `.pcn` JSON files (SAVE/LOAD buttons) | `.pcn` JSON files via gear-menu (document picker) |
+| Pre-trained examples | None | Bundled presets in gear-menu "Load Example ▸" + Signal Flow |
+| Manual / Brain / Make dialogs | Present | Not ported |
+| Intro / About | None (Manual has Credits/About page) | Full intro card on every launch |
+| Teletype / debug output | PrinterDialog | Not ported |
+
+### Conventions
+
+- **Controls are owner-drawn `UIView` subclasses** using Core Graphics in
+  `draw(_:)`, each exposing a small property/closure API (`onValueChanged`,
+  `onTap`, etc.) rather than target/action. Follow this pattern for new controls.
+- **Layout is manual** (frame-based in `viewDidLayoutSubviews`), not Auto Layout,
+  for the panel — mirroring the desktop's absolute positioning. The intro screen
+  *does* use Auto Layout (it's a scrollable document).
+- **Palette** is duplicated as a private `Palette` enum where needed and should
+  match the desktop color reference (black chassis, olive-grey brushed plates,
+  engraved monospaced text, backlit glows).
+
 ## Architecture
+
+> The rest of this document describes the **Windows Forms desktop app** (C#).
+> For the Swift/UIKit app, see [iOS App (PerceptronDemo)](#ios-app-perceptrondemo)
+> above.
 
 ### Core Components
 
