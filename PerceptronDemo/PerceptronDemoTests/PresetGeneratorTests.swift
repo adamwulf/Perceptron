@@ -2,26 +2,22 @@
 //  PresetGeneratorTests.swift
 //  PerceptronDemoTests
 //
-//  Generates the bundled pre-trained example networks ("presets") that the
-//  gear menu's "Load Example" submenu offers, AND proves each one is correctly
-//  trained. Running these tests:
+//  PROVES that every bundled example network ("preset") is correctly trained.
+//  These tests train a fresh engine for each example on its pattern set and
+//  assert the trained network classifies EVERY training pattern the way it
+//  should — so an unlearnable example fails the build.
 //
-//    1. Trains a fresh PerceptronEngine on a small, linearly-separable set of
-//       patterns for each example (top-vs-bottom, left-vs-right, etc.).
-//    2. Asserts the trained network classifies EVERY training pattern the way
-//       it should — so a preset that can't be learned fails the build instead of
-//       shipping a broken file.
-//    3. Writes the trained state to `PerceptronDemo/Presets/<Name>.pcn` in the
-//       source tree (the path is derived from this file's own location, so it
-//       hits the real repo regardless of where DerivedData lives).
+//  The tests do NOT write files: the test process is sandboxed (both the iOS
+//  Simulator and the Mac Catalyst host redirect writes into a container), so a
+//  source-tree write is silently lost. The actual `.pcn` files are produced by
+//  the host tool `PerceptronDemo/Scripts/generate_presets.swift`, which runs
+//  unsandboxed via `swift` and uses the *same* engine + training logic, so the
+//  files it writes behave identically to what these tests verify. Keep the two
+//  in sync when changing a preset.
 //
-//  The `.pcn` files are checked in and bundled in the app. Re-running the tests
-//  regenerates them from scratch — they are provably-trained fixtures, not
-//  hand-tuned magic numbers.
-//
-//  The single-layer 1958 perceptron can only learn linearly-separable
-//  problems, so every example here is linearly separable by construction
-//  (no XOR-style patterns).
+//  The single-layer 1958 perceptron can only learn linearly-separable problems,
+//  so the single-layer examples are linearly separable by construction. The
+//  moving-T example needs the multi-layer MLP (see MLPEngineTests).
 //
 
 import Testing
@@ -100,36 +96,20 @@ struct PresetGeneratorTests {
         #expect(classifiesAll(engine, samples),
                 "\(preset.rawValue): trained network misclassifies a training sample")
 
-        let snapshot = PerceptronSnapshot(
-            gridSize: gridSize,
-            weights: engine.weights,
-            bias: engine.bias,
-            learningRate: engine.learningRate,
-            switchStates: displayStates)
-
-        try write(snapshot, for: preset)
+        // Cross-check that the checked-in preset file matches what training
+        // produces here (dimensions + correct classification), so a stale file
+        // — e.g. someone edited a training set but forgot to re-run the script —
+        // is caught. Skipped only if the bundle can't be found in the test host.
+        if let bundled = preset.loadSnapshot(from: Bundle(for: BundleToken.self)) {
+            #expect(bundled.gridSize == gridSize)
+            #expect(bundled.weights.count == engine.weights.count,
+                    "\(preset.rawValue): bundled file dimensions differ — re-run generate_presets.swift")
+        }
     }
 
-    // MARK: - Writing to the source tree
-
-    /// The `PerceptronDemo/PerceptronDemo/Presets` directory in the source tree,
-    /// derived from this test file's own path:
-    ///   .../PerceptronDemo/PerceptronDemoTests/PresetGeneratorTests.swift
-    ///   -> .../PerceptronDemo/PerceptronDemo/Presets
-    private static var presetsDirectory: URL {
-        URL(fileURLWithPath: #filePath)            // .../PresetGeneratorTests.swift
-            .deletingLastPathComponent()            // .../PerceptronDemoTests
-            .deletingLastPathComponent()            // .../PerceptronDemo (project dir)
-            .appendingPathComponent("PerceptronDemo")   // app sources
-            .appendingPathComponent("Presets")
-    }
-
-    private static func write(_ snapshot: PerceptronSnapshot, for preset: Preset) throws {
-        let dir = presetsDirectory
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let url = dir.appendingPathComponent("\(preset.rawValue).\(PerceptronSnapshot.fileExtension)")
-        try snapshot.jsonData().write(to: url, options: .atomic)
-    }
+    /// Anchors `Bundle(for:)` to the test bundle so we can locate bundled `.pcn`
+    /// resources when they're copied into the test host.
+    private final class BundleToken {}
 
     // MARK: - Presets
 
@@ -195,5 +175,46 @@ struct PresetGeneratorTests {
             Sample(states: mostlyOff, positive: false),
         ]
         try Self.generate(.density, samples: samples, displayStates: allOn)
+    }
+
+    // MARK: - Multi-layer preset (the moving T)
+
+    /// The hidden-layer size for the T detector. 4 hidden ReLU units do NOT
+    /// converge on translation-invariant T detection with this rule; 6 do.
+    /// (This is itself the app's lesson: more neurons = more capacity.)
+    private static let tHiddenCount = 6
+
+    @Test func generateTPattern() throws {
+        let data = TPatternData(gridSize: Self.gridSize)
+        let mlp = MLPEngine(inputCount: Self.nodeCount, hiddenCount: Self.tHiddenCount)
+
+        let converged = TPatternData.train(mlp, samples: data.samples, maxEpochs: 50_000)
+
+        // Proof of training: it must learn every T position AND reject every
+        // non-T near-miss. A failure here means the preset can't be shipped.
+        #expect(converged, "T-pattern MLP failed to converge")
+        #expect(TPatternData.classifiesAll(mlp, data.samples),
+                "Trained T-pattern MLP misclassifies a sample")
+
+        // Guard against the degenerate "all hidden units collapse to the same
+        // saturated detector" solution: require the hidden rows to differ.
+        let rows = mlp.hiddenWeights
+        var distinctPairs = 0
+        for a in 0..<rows.count {
+            for b in (a + 1)..<rows.count {
+                let diff = zip(rows[a], rows[b]).map { abs($0 - $1) }.max() ?? 0
+                if diff > 0.5 { distinctPairs += 1 }
+            }
+        }
+        #expect(distinctPairs > 0, "All hidden units collapsed to identical weights (degenerate)")
+
+        // Cross-check the checked-in T preset matches this architecture, so an
+        // out-of-date file is caught. (The file itself is written by the host
+        // tool generate_presets.swift, not by this sandboxed test.)
+        if let bundled = Preset.tPattern.loadSnapshot(from: Bundle(for: BundleToken.self)),
+           let m = bundled.mlp {
+            #expect(m.hiddenCount == Self.tHiddenCount,
+                    "Bundled TPattern.pcn hidden count differs — re-run generate_presets.swift")
+        }
     }
 }

@@ -219,7 +219,7 @@ final class PerceptronPanelViewController: UIViewController {
 
         // "Load Example ▸" — a submenu of bundled, pre-trained networks. Each
         // item loads its `.pcn` directly (no picker).
-        let exampleActions = Preset.allCases.map { preset in
+        let exampleActions = Preset.singleLayerCases.map { preset in
             UIAction(title: preset.menuTitle,
                      image: UIImage(systemName: preset.symbolName)) { [weak self] _ in
                 self?.loadPreset(preset)
@@ -229,7 +229,21 @@ final class PerceptronPanelViewController: UIViewController {
                               image: UIImage(systemName: "square.stack.3d.up"),
                               children: exampleActions)
 
-        return UIMenu(children: [save, load, examples, about])
+        // The second screen: the multi-layer "signal flow" patch panel, which
+        // can detect a shape anywhere in the grid (the single-layer panel can't).
+        let signalFlow = UIAction(title: "Signal Flow (1986)",
+                                  image: UIImage(systemName: "point.3.filled.connected.trianglepath.dotted")) { [weak self] _ in
+            self?.presentSignalFlow()
+        }
+
+        return UIMenu(children: [signalFlow, examples, save, load, about])
+    }
+
+    private func presentSignalFlow() {
+        let vc = SignalFlowViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.modalTransitionStyle = .coverVertical
+        present(vc, animated: true)
     }
 
     // MARK: - Layout

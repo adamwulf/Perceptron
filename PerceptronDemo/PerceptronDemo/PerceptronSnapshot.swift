@@ -20,6 +20,21 @@ struct PerceptronSnapshot: Codable, Equatable {
     var learningRate: Double
     var switchStates: [Bool]
 
+    /// Present only for multi-layer (1986 backprop) networks — the extra
+    /// hidden-layer parameters the patch-panel screen needs. `nil` for ordinary
+    /// single-layer files, so existing `.pcn` files stay valid and single-layer
+    /// saves don't carry the field at all.
+    var mlp: MLP?
+
+    /// The learned parameters of a small multi-layer perceptron:
+    /// inputs → hidden (ReLU) → single output.
+    struct MLP: Codable, Equatable {
+        var hiddenCount: Int
+        var hiddenWeights: [[Double]]   // [hiddenCount][inputCount]  (W1)
+        var hiddenBiases: [Double]      // [hiddenCount]              (b1)
+        var outputWeights: [Double]     // [hiddenCount]              (W2)
+    }
+
     /// The file extension used for saved snapshots (JSON payload).
     static let fileExtension = "pcn"
 
@@ -45,6 +60,23 @@ enum Preset: String, CaseIterable {
     case leftVsRight   = "LeftVsRight"
     case diagonal      = "Diagonal"
     case density       = "Density"
+    case tPattern      = "TPattern"
+
+    /// Single-layer presets belong to the main panel; multi-layer presets
+    /// belong to the patch-panel (signal-flow) screen.
+    enum Kind { case singleLayer, multiLayer }
+
+    var kind: Kind {
+        switch self {
+        case .topVsBottom, .leftVsRight, .diagonal, .density: return .singleLayer
+        case .tPattern: return .multiLayer
+        }
+    }
+
+    /// The presets offered in the main panel's "Load Example" submenu.
+    static var singleLayerCases: [Preset] { allCases.filter { $0.kind == .singleLayer } }
+    /// The presets offered on the patch-panel screen.
+    static var multiLayerCases: [Preset] { allCases.filter { $0.kind == .multiLayer } }
 
     /// The label shown in the gear menu's "Load Example" submenu.
     var menuTitle: String {
@@ -53,6 +85,7 @@ enum Preset: String, CaseIterable {
         case .leftVsRight: return "Left vs Right"
         case .diagonal:    return "Diagonal"
         case .density:     return "Mostly On vs Mostly Off"
+        case .tPattern:    return "T Anywhere"
         }
     }
 
@@ -63,6 +96,7 @@ enum Preset: String, CaseIterable {
         case .leftVsRight: return "arrow.left.and.right.square"
         case .diagonal:    return "line.diagonal"
         case .density:     return "circle.grid.3x3.fill"
+        case .tPattern:    return "t.square"
         }
     }
 
