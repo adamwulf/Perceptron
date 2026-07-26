@@ -16,8 +16,23 @@ final class PushButton: UIView {
     var isSquare = false { didSet { setNeedsDisplay() } }
     /// nil = no backlight; otherwise the button glows in this color.
     var glowColor: UIColor? { didSet { setNeedsDisplay() } }
+    /// Optional SF Symbol engraved in the button face instead of `labelText`.
+    var symbolName: String? { didSet { setNeedsDisplay() } }
+
+    /// When set, a single tap opens this menu (the menu *is* the primary
+    /// action — no long press). Implemented with a transparent `UIButton`
+    /// overlay because `showsMenuAsPrimaryAction` is a `UIButton` feature and
+    /// this control is owner-drawn; the overlay drives our pressed state so the
+    /// backlight still brightens while the menu is up. `onTap` is not called
+    /// while a menu is set.
+    var menu: UIMenu? { didSet { updateMenuOverlay() } }
 
     private var isPressed = false { didSet { setNeedsDisplay() } }
+    private var menuOverlay: MenuOverlayButton?
+
+    override var accessibilityLabel: String? {
+        didSet { menuOverlay?.accessibilityLabel = accessibilityLabel }
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -69,8 +84,16 @@ final class PushButton: UIView {
         ctx.addPath(bodyPath.cgPath)
         ctx.strokePath()
 
-        // Label.
-        if !labelText.isEmpty {
+        // Face: an engraved symbol if one is set, otherwise the text label.
+        if let symbolName,
+           let symbol = UIImage(
+               systemName: symbolName,
+               withConfiguration: UIImage.SymbolConfiguration(
+                   pointSize: min(body.width, body.height) * 0.45, weight: .regular))?
+               .withTintColor(UIColor(white: 210/255, alpha: 1), renderingMode: .alwaysOriginal) {
+            symbol.draw(at: CGPoint(x: bounds.midX - symbol.size.width / 2,
+                                    y: bounds.midY - symbol.size.height / 2))
+        } else if !labelText.isEmpty {
             let font = UIFont.monospacedSystemFont(ofSize: 12, weight: .bold)
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: font,
@@ -82,6 +105,47 @@ final class PushButton: UIView {
                 withAttributes: attrs)
         }
     }
+
+    // MARK: - Menu
+
+    /// A `UIButton` that reports its highlight state, so the owner-drawn body
+    /// underneath can light up while the menu is being pressed/shown.
+    private final class MenuOverlayButton: UIButton {
+        var onHighlightChanged: ((Bool) -> Void)?
+        override var isHighlighted: Bool {
+            didSet { onHighlightChanged?(isHighlighted) }
+        }
+    }
+
+    private func updateMenuOverlay() {
+        guard let menu else {
+            menuOverlay?.removeFromSuperview()
+            menuOverlay = nil
+            isPressed = false
+            return
+        }
+
+        let overlay: MenuOverlayButton
+        if let existing = menuOverlay {
+            overlay = existing
+        } else {
+            overlay = MenuOverlayButton(type: .custom)
+            overlay.showsMenuAsPrimaryAction = true
+            overlay.onHighlightChanged = { [weak self] pressed in self?.isPressed = pressed }
+            overlay.frame = bounds
+            addSubview(overlay)
+            menuOverlay = overlay
+        }
+        overlay.menu = menu
+        overlay.accessibilityLabel = accessibilityLabel
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        menuOverlay?.frame = bounds
+    }
+
+    // MARK: - Touches
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)

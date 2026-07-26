@@ -2,10 +2,11 @@
 //  MetalPlateView.swift
 //  PerceptronDemo
 //
-//  Ports of MetalPlateControl.cs and MetalLabelControl.cs — brushed-metal
-//  plates with beveled edges, corner screws, and engraved text. Used for
-//  the OUTPUT formula, the OPERATING PROCEDURE instructions, and the small
-//  "Off=-1v On=+1v" / "BIAS" labels. Owner-drawn with Core Graphics.
+//  Ports of MetalPlateControl.cs, MetalLabelControl.cs, and MetalPlateButton.cs
+//  — brushed-metal plates with beveled edges, corner screws, and engraved text.
+//  Used for the OUTPUT formula, the OPERATING PROCEDURE instructions, the small
+//  "Off=-1v On=+1v" / "BIAS" labels, and the panel-to-panel navigation plates.
+//  Owner-drawn with Core Graphics.
 //
 
 import UIKit
@@ -118,6 +119,104 @@ final class MetalPlateView: UIView {
             (line as NSString).draw(at: CGPoint(x: textX, y: textY), withAttributes: light)
             textY += lineHeight
         }
+    }
+}
+
+// MARK: - Clickable plate (panel-to-panel navigation)
+
+/// A bolted-on nameplate you can press — used to walk between the two panels
+/// ("◀ MAIN PANEL" / "SIGNAL FLOW ▶"). Same brushed metal as the label plates,
+/// but it darkens and its engraving lights up while held, like a plate riveted
+/// over a real switch.
+final class MetalPlateButton: UIView {
+
+    var labelText = "" { didSet { setNeedsDisplay() } }
+    var onTap: (() -> Void)?
+
+    private var isPressed = false { didSet { setNeedsDisplay() } }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+        isOpaque = false
+        contentMode = .redraw
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        backgroundColor = .clear
+        isOpaque = false
+        contentMode = .redraw
+    }
+
+    override func draw(_ rect: CGRect) {
+        guard let ctx = UIGraphicsGetCurrentContext() else { return }
+        let plate = CGRect(x: 2, y: 2, width: bounds.width - 4, height: bounds.height - 4)
+
+        MetalPlate.fillBrushedBackground(
+            ctx, rect: plate, corner: 4,
+            top: isPressed
+                ? UIColor(red: 58/255, green: 63/255, blue: 58/255, alpha: 1)
+                : UIColor(red: 75/255, green: 80/255, blue: 75/255, alpha: 1),
+            bottom: isPressed
+                ? UIColor(red: 42/255, green: 47/255, blue: 42/255, alpha: 1)
+                : UIColor(red: 55/255, green: 60/255, blue: 55/255, alpha: 1))
+
+        // Brushed-metal horizontal striations.
+        ctx.setStrokeColor(UIColor(white: 1, alpha: 15/255).cgColor)
+        ctx.setLineWidth(1)
+        var y = plate.minY + 4
+        while y < plate.maxY - 4 {
+            ctx.move(to: CGPoint(x: plate.minX + 4, y: y))
+            ctx.addLine(to: CGPoint(x: plate.maxX - 4, y: y))
+            ctx.strokePath()
+            y += 3
+        }
+
+        // Border.
+        ctx.setStrokeColor(UIColor(red: 40/255, green: 45/255, blue: 40/255, alpha: 1).cgColor)
+        ctx.setLineWidth(1)
+        ctx.addPath(UIBezierPath(roundedRect: plate, cornerRadius: 4).cgPath)
+        ctx.strokePath()
+
+        // Corner screws.
+        MetalPlate.drawScrew(ctx, x: plate.minX + 6, y: plate.minY + 6, size: 5, slot: true)
+        MetalPlate.drawScrew(ctx, x: plate.maxX - 11, y: plate.minY + 6, size: 5, slot: true)
+        MetalPlate.drawScrew(ctx, x: plate.minX + 6, y: plate.maxY - 11, size: 5, slot: true)
+        MetalPlate.drawScrew(ctx, x: plate.maxX - 11, y: plate.maxY - 11, size: 5, slot: true)
+
+        // Centered engraved text, brighter while held.
+        let font = UIFont.monospacedSystemFont(ofSize: 12, weight: .bold)
+        let size = (labelText as NSString).size(withAttributes: [.font: font])
+        let tx = (bounds.width - size.width) / 2
+        let ty = (bounds.height - size.height) / 2
+        let shadow: [NSAttributedString.Key: Any] = [
+            .font: font, .foregroundColor: UIColor(red: 25/255, green: 30/255, blue: 25/255, alpha: 1)]
+        let light: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: isPressed
+                ? UIColor(red: 215/255, green: 220/255, blue: 210/255, alpha: 1)
+                : UIColor(red: 170/255, green: 175/255, blue: 165/255, alpha: 1)]
+        (labelText as NSString).draw(at: CGPoint(x: tx + 1, y: ty + 1), withAttributes: shadow)
+        (labelText as NSString).draw(at: CGPoint(x: tx, y: ty), withAttributes: light)
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        isPressed = true
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
+        isPressed = false
+        if let point = touches.first?.location(in: self), bounds.contains(point) {
+            onTap?()
+        }
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesCancelled(touches, with: event)
+        isPressed = false
     }
 }
 

@@ -27,6 +27,7 @@ final class SignalFlowViewController: UIViewController {
     // MARK: - Controls
 
     private var switches: [SwitchControl] = []
+    private let dpad = DPadControl()
     private let networkView = NetworkView()
     private let meter = AnalogMeterControl()
     private let outputLed = OutputLedControl()
@@ -35,7 +36,9 @@ final class SignalFlowViewController: UIViewController {
     private let learnPlusButton = PushButton()
     private let learnMinusButton = PushButton()
     private let resetButton = PushButton()
-    private let closeButton = UIButton(type: .system)
+
+    // Nameplate at the left end of the strip — walks back to the main panel.
+    private let mainPanelPlate = MetalPlateButton()
 
     // MARK: - Lifecycle
 
@@ -65,6 +68,13 @@ final class SignalFlowViewController: UIViewController {
             view.addSubview(sw)
         }
 
+        // Same joystick as the main panel: arrows shift the pattern, the center
+        // button toggles all/none. Moving a shape around the grid is the point
+        // of this screen — the network keeps firing wherever the T lands.
+        dpad.onShift = { [weak self] dx, dy in self?.shiftPattern(dx: dx, dy: dy) }
+        dpad.onToggleAll = { [weak self] in self?.toggleAllSwitches() }
+        view.addSubview(dpad)
+
         view.addSubview(networkView)
 
         view.addSubview(meter)
@@ -86,28 +96,21 @@ final class SignalFlowViewController: UIViewController {
         resetButton.onTap = { [weak self] in self?.resetNetwork() }
         view.addSubview(resetButton)
 
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "xmark.circle.fill",
-                               withConfiguration: UIImage.SymbolConfiguration(pointSize: 24))
-        config.baseForegroundColor = UIColor(white: 150/255, alpha: 1)
-        closeButton.configuration = config
-        closeButton.accessibilityLabel = "Close"
-        closeButton.addAction(UIAction { [weak self] _ in self?.dismiss(animated: true) },
-                              for: .touchUpInside)
-        closeButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(closeButton)
-
-        NSLayoutConstraint.activate([
-            closeButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
-            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
-        ])
+        // Navigation plate — back to the panel on the left of the bench. The
+        // slide transition reverses itself on dismiss.
+        mainPanelPlate.labelText = "◀ MAIN PANEL"
+        mainPanelPlate.onTap = { [weak self] in self?.dismiss(animated: true) }
+        view.addSubview(mainPanelPlate)
     }
 
     // MARK: - Layout
 
     private func layoutPanel() {
+        // Same margin and switch-column proportion as the main panel, so the
+        // shared `SwitchGrid.Metrics` produces identically sized switches on
+        // both screens.
         let safe = view.safeAreaLayoutGuide.layoutFrame
-        let content = safe.insetBy(dx: 20, dy: 20)
+        let content = safe.insetBy(dx: 24, dy: 24)
 
         titleLabel.frame = CGRect(x: content.minX, y: content.minY, width: 260, height: 22)
 
@@ -115,20 +118,20 @@ final class SignalFlowViewController: UIViewController {
         let bodyTop = content.minY + 34
         let bodyHeight = content.height - 34 - buttonStrip - 16
 
-        // Left column: 4×4 switch grid.
-        let switchColWidth = min(content.width * 0.24, 220)
-        let cell = min(switchColWidth / CGFloat(gridSize), 52)
-        let gridWidth = cell * CGFloat(gridSize)
-        let gridX = content.minX + (switchColWidth - gridWidth) / 2
-        let swSize = min(cell - 6, 42)
-        let gridHeight = cell * 1.2 * CGFloat(gridSize)
-        let gridTop = bodyTop + max(0, (bodyHeight - gridHeight) / 2)
-        for (i, sw) in switches.enumerated() {
-            let r = i / gridSize, c = i % gridSize
-            let x = gridX + CGFloat(c) * cell + (cell - swSize) / 2
-            let y = gridTop + CGFloat(r) * (cell * 1.2)
-            sw.frame = CGRect(x: x, y: y, width: swSize, height: swSize * 1.35)
-        }
+        // Left column: 4×4 switch grid with the joystick below it, the pair
+        // centered vertically in the body.
+        let switchColWidth = content.width * 0.26
+        let metrics = SwitchGrid.Metrics(columnWidth: switchColWidth, gridSize: gridSize)
+        let dpadSize = DPadControl.preferredSize
+        let dpadDrop = metrics.rowPitch * CGFloat(gridSize) + 60  // grid top → joystick center
+        let blockHeight = dpadDrop + dpadSize.height / 2
+        let gridX = content.minX + (switchColWidth - metrics.width) / 2
+        let gridTop = bodyTop + max(0, (bodyHeight - blockHeight) / 2)
+        SwitchGrid.layout(switches, metrics: metrics, x: gridX, y: gridTop)
+
+        dpad.frame = CGRect(x: content.minX + (switchColWidth - dpadSize.width) / 2,
+                            y: gridTop + dpadDrop - dpadSize.height / 2,
+                            width: dpadSize.width, height: dpadSize.height)
 
         // Right edge: meter + output LED, stacked.
         let rightColWidth: CGFloat = min(content.width * 0.22, 200)
@@ -143,13 +146,18 @@ final class SignalFlowViewController: UIViewController {
         let netWidth = rightX - 8 - netX
         networkView.frame = CGRect(x: netX, y: bodyTop, width: max(netWidth, 0), height: bodyHeight)
 
-        // Bottom: LEARN + / RESET / LEARN − strip.
+        // Bottom: ◀ MAIN PANEL / LEARN + / RESET / LEARN − strip. The navigation
+        // plate is at the far left because that's the direction it takes you —
+        // mirroring the main panel, where it sits at the far right.
         let gap: CGFloat = 16
-        let bw = (content.width - gap * 2) / 3
+        let plateWidth = min(180, content.width * 0.2)
+        let bw = (content.width - gap * 3 - plateWidth) / 3
         let by = content.maxY - buttonStrip
-        learnPlusButton.frame = CGRect(x: content.minX, y: by, width: bw, height: buttonStrip)
-        resetButton.frame = CGRect(x: content.minX + bw + gap, y: by, width: bw, height: buttonStrip)
-        learnMinusButton.frame = CGRect(x: content.minX + (bw + gap) * 2, y: by, width: bw, height: buttonStrip)
+        mainPanelPlate.frame = CGRect(x: content.minX, y: by, width: plateWidth, height: buttonStrip)
+        let buttonsX = content.minX + plateWidth + gap
+        learnPlusButton.frame = CGRect(x: buttonsX, y: by, width: bw, height: buttonStrip)
+        resetButton.frame = CGRect(x: buttonsX + bw + gap, y: by, width: bw, height: buttonStrip)
+        learnMinusButton.frame = CGRect(x: buttonsX + (bw + gap) * 2, y: by, width: bw, height: buttonStrip)
     }
 
     // MARK: - Behavior
@@ -175,6 +183,16 @@ final class SignalFlowViewController: UIViewController {
 
     private func resetNetwork() {
         engine.reset()
+        refresh()
+    }
+
+    private func shiftPattern(dx: Int, dy: Int) {
+        SwitchGrid.shift(switches, gridSize: gridSize, dx: dx, dy: dy)
+        refresh()
+    }
+
+    private func toggleAllSwitches() {
+        SwitchGrid.toggleAll(switches)
         refresh()
     }
 

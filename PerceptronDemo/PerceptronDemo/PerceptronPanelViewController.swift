@@ -25,11 +25,7 @@ final class PerceptronPanelViewController: UIViewController {
     private var knobs: [KnobControl] = []
     private let biasKnob = KnobControl()
 
-    private let arrowUp = ArrowButton()
-    private let arrowDown = ArrowButton()
-    private let arrowLeft = ArrowButton()
-    private let arrowRight = ArrowButton()
-    private let centerToggle = PushButton()
+    private let dpad = DPadControl()
 
     private let meter = AnalogMeterControl()
     private let outputLed = OutputLedControl()
@@ -44,8 +40,14 @@ final class PerceptronPanelViewController: UIViewController {
     private let rateKnob = KnobControl()
     private let rateLabel = MetalLabelView()
 
-    // Gear button (top-right) opens a Save / Load / About menu.
-    private let gearButton = UIButton(type: .system)
+    // Gear button (bottom strip) opens a Save / Load / About menu.
+    private let gearButton = PushButton()
+
+    // Nameplate at the right end of the strip — walks to the Signal Flow panel.
+    private let signalFlowPlate = MetalPlateButton()
+
+    // Held strongly — `transitioningDelegate` is a weak reference.
+    private let slideTransition = SlideTransitionDelegate()
 
     // MARK: - Lifecycle
 
@@ -96,28 +98,10 @@ final class PerceptronPanelViewController: UIViewController {
         }
         view.addSubview(biasKnob)
 
-        // D-pad — shifts the switch pattern.
-        arrowUp.direction = .up
-        arrowUp.onTap = { [weak self] in self?.shiftPattern(dx: 0, dy: -1) }
-        arrowDown.direction = .down
-        arrowDown.onTap = { [weak self] in self?.shiftPattern(dx: 0, dy: 1) }
-        arrowLeft.direction = .left
-        arrowLeft.onTap = { [weak self] in self?.shiftPattern(dx: -1, dy: 0) }
-        arrowRight.direction = .right
-        arrowRight.onTap = { [weak self] in self?.shiftPattern(dx: 1, dy: 0) }
-        [arrowUp, arrowDown, arrowLeft, arrowRight].forEach { view.addSubview($0) }
-
-        centerToggle.isSquare = true
-        centerToggle.onTap = { [weak self] in self?.toggleAllSwitches() }
-        view.addSubview(centerToggle)
-
-        // Swipe the center button like a joystick to shift the pattern, in
-        // addition to the arrow buttons. A plain tap still toggles all/none.
-        for dir: UISwipeGestureRecognizer.Direction in [.up, .down, .left, .right] {
-            let swipe = UISwipeGestureRecognizer(target: self, action: #selector(handleCenterSwipe(_:)))
-            swipe.direction = dir
-            centerToggle.addGestureRecognizer(swipe)
-        }
+        // D-pad — shifts the switch pattern; its center toggles all/none.
+        dpad.onShift = { [weak self] dx, dy in self?.shiftPattern(dx: dx, dy: dy) }
+        dpad.onToggleAll = { [weak self] in self?.toggleAllSwitches() }
+        view.addSubview(dpad)
 
         // Right column.
         view.addSubview(meter)
@@ -175,32 +159,24 @@ final class PerceptronPanelViewController: UIViewController {
         rateLabel.text = "RATE"
         view.addSubview(rateLabel)
 
+        // Navigation plate — the panel to the right on the bench.
+        signalFlowPlate.labelText = "SIGNAL FLOW ▶"
+        signalFlowPlate.onTap = { [weak self] in self?.presentSignalFlow() }
+        view.addSubview(signalFlowPlate)
+
         buildGearButton()
     }
 
-    /// A small circular gear button pinned to the top-right corner. Tapping it
-    /// pops a menu with Save / Load / About — keeping the crowded bottom
-    /// Learn/Reset strip untouched. Styled dark to match the chassis.
+    /// A round backlit gear button at the right end of the bottom Learn/Reset
+    /// strip — the same mechanical treatment as its neighbors. A single tap
+    /// pops the Save / Load / Examples / Signal Flow / About menu (the menu is
+    /// the button's primary action, so there's no long press on Mac or iPad).
     private func buildGearButton() {
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(
-            systemName: "gearshape.fill",
-            withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .regular))
-        config.baseForegroundColor = UIColor(white: 150/255, alpha: 1)
-        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
-        gearButton.configuration = config
+        gearButton.symbolName = "gearshape.fill"
+        gearButton.glowColor = UIColor(red: 255/255, green: 220/255, blue: 80/255, alpha: 1)
         gearButton.accessibilityLabel = "Settings"
-        gearButton.showsMenuAsPrimaryAction = true
         gearButton.menu = makeGearMenu()
-        gearButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(gearButton)
-
-        NSLayoutConstraint.activate([
-            gearButton.trailingAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
-            gearButton.topAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
-        ])
     }
 
     private func makeGearMenu() -> UIMenu {
@@ -239,10 +215,12 @@ final class PerceptronPanelViewController: UIViewController {
         return UIMenu(children: [signalFlow, examples, save, load, about])
     }
 
+    /// Slides the Signal Flow screen in from the right (this panel slides out to
+    /// the left) — as if panning your gaze across the bench to the next machine.
     private func presentSignalFlow() {
         let vc = SignalFlowViewController()
         vc.modalPresentationStyle = .fullScreen
-        vc.modalTransitionStyle = .coverVertical
+        vc.transitioningDelegate = slideTransition
         present(vc, animated: true)
     }
 
@@ -279,77 +257,16 @@ final class PerceptronPanelViewController: UIViewController {
         voltageLabel.frame = CGRect(x: x + (width - 130) / 2, y: top, width: 130, height: 18)
 
         let gridTop = top + 28
-        let cell = min(width / CGFloat(gridSize), 72)
-        let gridWidth = cell * CGFloat(gridSize)
-        let gridX = x + (width - gridWidth) / 2
-        let swSize = min(cell - 6, 56)
+        let metrics = SwitchGrid.Metrics(columnWidth: width, gridSize: gridSize)
+        let gridX = x + (width - metrics.width) / 2
+        SwitchGrid.layout(switches, metrics: metrics, x: gridX, y: gridTop)
 
-        for (i, sw) in switches.enumerated() {
-            let r = i / gridSize, c = i % gridSize
-            let cx = gridX + CGFloat(c) * cell + (cell - swSize) / 2
-            let cy = gridTop + CGFloat(r) * (cell * 1.15)
-            sw.frame = CGRect(x: cx, y: cy, width: swSize, height: swSize * 1.4)
-        }
-
-        // D-pad below the switch grid. Each arrow's triangle is drawn at its
-        // original visual size and in its original position (its center sits
-        // `arrowOffset` from the d-pad center). The tappable frame is inflated
-        // by `hitPad` so it's easy to hit on iPad — the drawn triangle stays
-        // put, only the invisible touch target grows. The edge facing the
-        // center button is clamped so the enlarged area never overlaps it.
-        let dpadCenterY = gridTop + CGFloat(gridSize) * (cell * 1.15) + 60
-        let dpadCenterX = x + width / 2
-        let hArrow = CGSize(width: 40, height: 16)          // up / down triangle
-        let vArrow = CGSize(width: hArrow.height, height: hArrow.width) // left / right
-        let arrowOffset: CGFloat = 35   // distance from d-pad center to arrow center
-        let hitPad: CGFloat = 16        // touch padding added on each side
-        let centerHalf: CGFloat = 23
-
-        centerToggle.frame = CGRect(x: dpadCenterX - centerHalf, y: dpadCenterY - centerHalf,
-                                    width: centerHalf * 2, height: centerHalf * 2)
-
-        // Draws `size` centered on the arrow's on-screen point; pads the frame
-        // by `hitPad`, but clamps the inner edge (the one pointing at the d-pad
-        // center along `dir`) to the center button's boundary so the two never
-        // overlap. `arrowCenter` keeps the triangle at its true position even
-        // though the clamped frame is asymmetric.
-        func padded(_ view: ArrowButton, size: CGSize, dir: ArrowDirection) {
-            view.arrowSize = size
-            let cx: CGFloat, cy: CGFloat
-            var frame: CGRect
-            switch dir {
-            case .up:
-                cx = dpadCenterX; cy = dpadCenterY - arrowOffset
-                let bottom = dpadCenterY - centerHalf            // clamp to top of button
-                let top = cy - size.height / 2 - hitPad
-                frame = CGRect(x: cx - size.width / 2 - hitPad, y: top,
-                               width: size.width + hitPad * 2, height: bottom - top)
-            case .down:
-                cx = dpadCenterX; cy = dpadCenterY + arrowOffset
-                let top = dpadCenterY + centerHalf               // clamp to bottom of button
-                let bottom = cy + size.height / 2 + hitPad
-                frame = CGRect(x: cx - size.width / 2 - hitPad, y: top,
-                               width: size.width + hitPad * 2, height: bottom - top)
-            case .left:
-                cx = dpadCenterX - arrowOffset; cy = dpadCenterY
-                let right = dpadCenterX - centerHalf             // clamp to left of button
-                let left = cx - size.width / 2 - hitPad
-                frame = CGRect(x: left, y: cy - size.height / 2 - hitPad,
-                               width: right - left, height: size.height + hitPad * 2)
-            case .right:
-                cx = dpadCenterX + arrowOffset; cy = dpadCenterY
-                let left = dpadCenterX + centerHalf              // clamp to right of button
-                let right = cx + size.width / 2 + hitPad
-                frame = CGRect(x: left, y: cy - size.height / 2 - hitPad,
-                               width: right - left, height: size.height + hitPad * 2)
-            }
-            view.frame = frame
-            view.arrowCenter = CGPoint(x: cx - frame.minX, y: cy - frame.minY)
-        }
-        padded(arrowUp,    size: hArrow, dir: .up)
-        padded(arrowDown,  size: hArrow, dir: .down)
-        padded(arrowLeft,  size: vArrow, dir: .left)
-        padded(arrowRight, size: vArrow, dir: .right)
+        // Joystick below the switch grid.
+        let dpadCenterY = gridTop + metrics.rowPitch * CGFloat(gridSize) + 60
+        let dpadSize = DPadControl.preferredSize
+        dpad.frame = CGRect(x: x + (width - dpadSize.width) / 2,
+                            y: dpadCenterY - dpadSize.height / 2,
+                            width: dpadSize.width, height: dpadSize.height)
     }
 
     private func layoutKnobColumn(x: CGFloat, top: CGFloat, width: CGFloat, height: CGFloat) {
@@ -412,12 +329,20 @@ final class PerceptronPanelViewController: UIViewController {
                                       height: min(procedureContentHeight, max(remaining, 0)))
     }
 
+    /// LEARN + / RESET / LEARN − / ⚙ / SIGNAL FLOW ▶. The navigation plate sits
+    /// at the far right because that's the direction it takes you.
     private func layoutButtonStrip(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {
         let gap: CGFloat = 16
-        let buttonWidth = (width - gap * 2) / 3
+        let gearSize = height                       // circle
+        let plateWidth = min(180, width * 0.2)
+        let buttonWidth = (width - gap * 4 - gearSize - plateWidth) / 3
         learnPlusButton.frame = CGRect(x: x, y: y, width: buttonWidth, height: height)
         resetButton.frame = CGRect(x: x + buttonWidth + gap, y: y, width: buttonWidth, height: height)
         learnMinusButton.frame = CGRect(x: x + (buttonWidth + gap) * 2, y: y, width: buttonWidth, height: height)
+        gearButton.frame = CGRect(x: x + width - plateWidth - gap - gearSize, y: y,
+                                  width: gearSize, height: gearSize)
+        signalFlowPlate.frame = CGRect(x: x + width - plateWidth, y: y,
+                                       width: plateWidth, height: height)
     }
 
     // MARK: - Behavior
@@ -450,39 +375,12 @@ final class PerceptronPanelViewController: UIViewController {
     }
 
     private func toggleAllSwitches() {
-        // If any switch is off, turn all on; otherwise turn all off.
-        let turnOn = switches.contains { !$0.isOn }
-        switches.forEach { $0.isOn = turnOn }
+        SwitchGrid.toggleAll(switches)
         updateOutput()
     }
 
-    @objc private func handleCenterSwipe(_ gesture: UISwipeGestureRecognizer) {
-        switch gesture.direction {
-        case .up:    shiftPattern(dx: 0, dy: -1)
-        case .down:  shiftPattern(dx: 0, dy: 1)
-        case .left:  shiftPattern(dx: -1, dy: 0)
-        case .right: shiftPattern(dx: 1, dy: 0)
-        default:     break
-        }
-    }
-
     private func shiftPattern(dx: Int, dy: Int) {
-        var grid = Array(repeating: Array(repeating: false, count: gridSize), count: gridSize)
-        for (i, sw) in switches.enumerated() {
-            grid[i / gridSize][i % gridSize] = sw.isOn
-        }
-        var newGrid = Array(repeating: Array(repeating: false, count: gridSize), count: gridSize)
-        for r in 0..<gridSize {
-            for c in 0..<gridSize {
-                let sr = r - dy, sc = c - dx
-                if sr >= 0, sr < gridSize, sc >= 0, sc < gridSize {
-                    newGrid[r][c] = grid[sr][sc]
-                }
-            }
-        }
-        for (i, sw) in switches.enumerated() {
-            sw.isOn = newGrid[i / gridSize][i % gridSize]
-        }
+        SwitchGrid.shift(switches, gridSize: gridSize, dx: dx, dy: dy)
         updateOutput()
     }
 
