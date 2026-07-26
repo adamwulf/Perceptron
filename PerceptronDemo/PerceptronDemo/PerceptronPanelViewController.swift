@@ -43,6 +43,9 @@ final class PerceptronPanelViewController: UIViewController {
     // Gear button (bottom strip) opens a Save / Load / About menu.
     private let gearButton = PushButton()
 
+    // Nameplate at the right end of the strip — walks to the Signal Flow panel.
+    private let signalFlowPlate = MetalPlateButton()
+
     // Held strongly — `transitioningDelegate` is a weak reference.
     private let slideTransition = SlideTransitionDelegate()
 
@@ -155,6 +158,11 @@ final class PerceptronPanelViewController: UIViewController {
 
         rateLabel.text = "RATE"
         view.addSubview(rateLabel)
+
+        // Navigation plate — the panel to the right on the bench.
+        signalFlowPlate.labelText = "SIGNAL FLOW ▶"
+        signalFlowPlate.onTap = { [weak self] in self?.presentSignalFlow() }
+        view.addSubview(signalFlowPlate)
 
         buildGearButton()
     }
@@ -321,16 +329,20 @@ final class PerceptronPanelViewController: UIViewController {
                                       height: min(procedureContentHeight, max(remaining, 0)))
     }
 
+    /// LEARN + / RESET / LEARN − / ⚙ / SIGNAL FLOW ▶. The navigation plate sits
+    /// at the far right because that's the direction it takes you.
     private func layoutButtonStrip(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {
         let gap: CGFloat = 16
-        // The gear sits at the right end as a circle (width == height), the
-        // three wide buttons split what's left.
-        let gearSize = height
-        let buttonWidth = (width - gap * 3 - gearSize) / 3
+        let gearSize = height                       // circle
+        let plateWidth = min(180, width * 0.2)
+        let buttonWidth = (width - gap * 4 - gearSize - plateWidth) / 3
         learnPlusButton.frame = CGRect(x: x, y: y, width: buttonWidth, height: height)
         resetButton.frame = CGRect(x: x + buttonWidth + gap, y: y, width: buttonWidth, height: height)
         learnMinusButton.frame = CGRect(x: x + (buttonWidth + gap) * 2, y: y, width: buttonWidth, height: height)
-        gearButton.frame = CGRect(x: x + width - gearSize, y: y, width: gearSize, height: gearSize)
+        gearButton.frame = CGRect(x: x + width - plateWidth - gap - gearSize, y: y,
+                                  width: gearSize, height: gearSize)
+        signalFlowPlate.frame = CGRect(x: x + width - plateWidth, y: y,
+                                       width: plateWidth, height: height)
     }
 
     // MARK: - Behavior

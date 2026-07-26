@@ -36,7 +36,9 @@ final class SignalFlowViewController: UIViewController {
     private let learnPlusButton = PushButton()
     private let learnMinusButton = PushButton()
     private let resetButton = PushButton()
-    private let closeButton = UIButton(type: .system)
+
+    // Nameplate at the left end of the strip — walks back to the main panel.
+    private let mainPanelPlate = MetalPlateButton()
 
     // MARK: - Lifecycle
 
@@ -94,21 +96,11 @@ final class SignalFlowViewController: UIViewController {
         resetButton.onTap = { [weak self] in self?.resetNetwork() }
         view.addSubview(resetButton)
 
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "xmark.circle.fill",
-                               withConfiguration: UIImage.SymbolConfiguration(pointSize: 24))
-        config.baseForegroundColor = UIColor(white: 150/255, alpha: 1)
-        closeButton.configuration = config
-        closeButton.accessibilityLabel = "Close"
-        closeButton.addAction(UIAction { [weak self] _ in self?.dismiss(animated: true) },
-                              for: .touchUpInside)
-        closeButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(closeButton)
-
-        NSLayoutConstraint.activate([
-            closeButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
-            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
-        ])
+        // Navigation plate — back to the panel on the left of the bench. The
+        // slide transition reverses itself on dismiss.
+        mainPanelPlate.labelText = "◀ MAIN PANEL"
+        mainPanelPlate.onTap = { [weak self] in self?.dismiss(animated: true) }
+        view.addSubview(mainPanelPlate)
     }
 
     // MARK: - Layout
@@ -154,13 +146,18 @@ final class SignalFlowViewController: UIViewController {
         let netWidth = rightX - 8 - netX
         networkView.frame = CGRect(x: netX, y: bodyTop, width: max(netWidth, 0), height: bodyHeight)
 
-        // Bottom: LEARN + / RESET / LEARN − strip.
+        // Bottom: ◀ MAIN PANEL / LEARN + / RESET / LEARN − strip. The navigation
+        // plate is at the far left because that's the direction it takes you —
+        // mirroring the main panel, where it sits at the far right.
         let gap: CGFloat = 16
-        let bw = (content.width - gap * 2) / 3
+        let plateWidth = min(180, content.width * 0.2)
+        let bw = (content.width - gap * 3 - plateWidth) / 3
         let by = content.maxY - buttonStrip
-        learnPlusButton.frame = CGRect(x: content.minX, y: by, width: bw, height: buttonStrip)
-        resetButton.frame = CGRect(x: content.minX + bw + gap, y: by, width: bw, height: buttonStrip)
-        learnMinusButton.frame = CGRect(x: content.minX + (bw + gap) * 2, y: by, width: bw, height: buttonStrip)
+        mainPanelPlate.frame = CGRect(x: content.minX, y: by, width: plateWidth, height: buttonStrip)
+        let buttonsX = content.minX + plateWidth + gap
+        learnPlusButton.frame = CGRect(x: buttonsX, y: by, width: bw, height: buttonStrip)
+        resetButton.frame = CGRect(x: buttonsX + bw + gap, y: by, width: bw, height: buttonStrip)
+        learnMinusButton.frame = CGRect(x: buttonsX + (bw + gap) * 2, y: by, width: bw, height: buttonStrip)
     }
 
     // MARK: - Behavior

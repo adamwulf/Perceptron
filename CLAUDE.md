@@ -93,7 +93,7 @@ PerceptronDemo/
       AnalogMeterControl.swift     # Vintage needle gauge (value -100…100)
       OutputLedControl.swift       # Large output LED (isOn, label)
       NetworkView.swift            # Signal-flow diagram: bulbs (neurons) + wires (weights)
-      MetalPlateView.swift         # Multi-line instruction plate (lines) + MetalLabelView (text)
+      MetalPlateView.swift         # Instruction plate (lines) + MetalLabelView (text) + MetalPlateButton (nav)
     Presets/                       # Bundled, pre-trained example networks (*.pcn)
     Scripts/
       generate_presets.swift       # Host tool that trains + WRITES the Presets/*.pcn
@@ -124,8 +124,8 @@ PerceptronDemo/
 - **PerceptronPanelViewController.swift** (~511 LOC) — The main screen. Three
   columns laid out manually in `viewDidLayoutSubviews` → `layoutPanel()`:
   switches + d-pad (left), weight knobs + BIAS/RATE (center), meter + LED +
-  plates (right). A **LEARN + / RESET / LEARN − / ⚙** button strip sits along
-  the bottom. Fixed **4×4 grid** (`gridSize = 4`).
+  plates (right). A **LEARN + / RESET / LEARN − / ⚙ / SIGNAL FLOW ▶** strip sits
+  along the bottom. Fixed **4×4 grid** (`gridSize = 4`).
 - **IntroViewController.swift** (~457 LOC) — The launch "briefing card": what the
   machine does, 1958 history, an illustrated panel inventory (using the
   `Tutorial*` imageset screenshots), and Wikipedia / video links, all in a scroll
@@ -202,9 +202,13 @@ output bulb + meter/LED. It opens on the bundled, pre-trained **"T Anywhere"**
 preset, which detects a T shape *at any position* in the grid — something the
 single-layer panel provably cannot do.
 
-It's reached from the gear menu and **slides in from the right** while the main
-panel slides out to the left (`SlideTransitionDelegate`, reversed on dismiss),
-as if panning your gaze across the bench. The switch grid uses the same
+**Moving between the two panels** is a pair of engraved `MetalPlateButton`
+nameplates in the bottom strips — **SIGNAL FLOW ▶** at the far right of the main
+panel, **◀ MAIN PANEL** at the far left of this one, each at the end it takes
+you toward. (The gear menu's "Signal Flow (1986)" item still works too.) The
+screen **slides in from the right** while the main panel slides out to the left
+(`SlideTransitionDelegate`, reversed on dismiss), as if panning your gaze across
+the bench. The switch grid uses the same
 `SwitchGrid.Metrics` as the main panel, so the switches are the same size on
 both screens, and the same `DPadControl` joystick sits below it — walking the T
 around the grid while the output LED stays lit is the whole demonstration.
