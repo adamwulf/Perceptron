@@ -27,6 +27,7 @@ final class SignalFlowViewController: UIViewController {
     // MARK: - Controls
 
     private var switches: [SwitchControl] = []
+    private let dpad = DPadControl()
     private let networkView = NetworkView()
     private let meter = AnalogMeterControl()
     private let outputLed = OutputLedControl()
@@ -64,6 +65,13 @@ final class SignalFlowViewController: UIViewController {
             switches.append(sw)
             view.addSubview(sw)
         }
+
+        // Same joystick as the main panel: arrows shift the pattern, the center
+        // button toggles all/none. Moving a shape around the grid is the point
+        // of this screen — the network keeps firing wherever the T lands.
+        dpad.onShift = { [weak self] dx, dy in self?.shiftPattern(dx: dx, dy: dy) }
+        dpad.onToggleAll = { [weak self] in self?.toggleAllSwitches() }
+        view.addSubview(dpad)
 
         view.addSubview(networkView)
 
@@ -106,8 +114,11 @@ final class SignalFlowViewController: UIViewController {
     // MARK: - Layout
 
     private func layoutPanel() {
+        // Same margin and switch-column proportion as the main panel, so the
+        // shared `SwitchGrid.Metrics` produces identically sized switches on
+        // both screens.
         let safe = view.safeAreaLayoutGuide.layoutFrame
-        let content = safe.insetBy(dx: 20, dy: 20)
+        let content = safe.insetBy(dx: 24, dy: 24)
 
         titleLabel.frame = CGRect(x: content.minX, y: content.minY, width: 260, height: 22)
 
@@ -115,20 +126,20 @@ final class SignalFlowViewController: UIViewController {
         let bodyTop = content.minY + 34
         let bodyHeight = content.height - 34 - buttonStrip - 16
 
-        // Left column: 4×4 switch grid.
-        let switchColWidth = min(content.width * 0.24, 220)
-        let cell = min(switchColWidth / CGFloat(gridSize), 52)
-        let gridWidth = cell * CGFloat(gridSize)
-        let gridX = content.minX + (switchColWidth - gridWidth) / 2
-        let swSize = min(cell - 6, 42)
-        let gridHeight = cell * 1.2 * CGFloat(gridSize)
-        let gridTop = bodyTop + max(0, (bodyHeight - gridHeight) / 2)
-        for (i, sw) in switches.enumerated() {
-            let r = i / gridSize, c = i % gridSize
-            let x = gridX + CGFloat(c) * cell + (cell - swSize) / 2
-            let y = gridTop + CGFloat(r) * (cell * 1.2)
-            sw.frame = CGRect(x: x, y: y, width: swSize, height: swSize * 1.35)
-        }
+        // Left column: 4×4 switch grid with the joystick below it, the pair
+        // centered vertically in the body.
+        let switchColWidth = content.width * 0.26
+        let metrics = SwitchGrid.Metrics(columnWidth: switchColWidth, gridSize: gridSize)
+        let dpadSize = DPadControl.preferredSize
+        let dpadDrop = metrics.rowPitch * CGFloat(gridSize) + 60  // grid top → joystick center
+        let blockHeight = dpadDrop + dpadSize.height / 2
+        let gridX = content.minX + (switchColWidth - metrics.width) / 2
+        let gridTop = bodyTop + max(0, (bodyHeight - blockHeight) / 2)
+        SwitchGrid.layout(switches, metrics: metrics, x: gridX, y: gridTop)
+
+        dpad.frame = CGRect(x: content.minX + (switchColWidth - dpadSize.width) / 2,
+                            y: gridTop + dpadDrop - dpadSize.height / 2,
+                            width: dpadSize.width, height: dpadSize.height)
 
         // Right edge: meter + output LED, stacked.
         let rightColWidth: CGFloat = min(content.width * 0.22, 200)
@@ -175,6 +186,16 @@ final class SignalFlowViewController: UIViewController {
 
     private func resetNetwork() {
         engine.reset()
+        refresh()
+    }
+
+    private func shiftPattern(dx: Int, dy: Int) {
+        SwitchGrid.shift(switches, gridSize: gridSize, dx: dx, dy: dy)
+        refresh()
+    }
+
+    private func toggleAllSwitches() {
+        SwitchGrid.toggleAll(switches)
         refresh()
     }
 

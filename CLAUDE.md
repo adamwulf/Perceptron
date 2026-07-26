@@ -79,14 +79,17 @@ PerceptronDemo/
     SignalFlowViewController.swift # 2nd screen: multi-layer "patch panel" (1986)
     IntroViewController.swift      # Launch "briefing card" / About screen
     PerceptronSnapshot.swift       # Codable panel state (.pcn) + Preset catalog
+    SlideTransition.swift          # Horizontal "pan across the desk" modal transition
     Engine/
       PerceptronEngine.swift       # Single-layer (classic 1958 rule)
       MLPEngine.swift              # Multi-layer 16→6→1 (1986 backprop, ReLU)
     Controls/                      # Owner-drawn UIViews mirroring the desktop controls
       SwitchControl.swift          # Toggle switch + LED (isOn, value +1/-1)
+      SwitchGrid.swift             # Shared switch-grid metrics + shift/toggle helpers
       KnobControl.swift            # Rotary dial (value, minValue/maxValue -30…30, step 0.05)
       ArrowButton.swift            # Triangular d-pad button (direction, arrowSize, arrowCenter)
-      PushButton.swift             # Backlit mechanical button (labelText, glowColor, isSquare, onTap)
+      DPadControl.swift            # The joystick: 4 arrows + center button (onShift, onToggleAll)
+      PushButton.swift             # Backlit mechanical button (labelText/symbolName, glowColor, isSquare, onTap, menu)
       AnalogMeterControl.swift     # Vintage needle gauge (value -100…100)
       OutputLedControl.swift       # Large output LED (isOn, label)
       NetworkView.swift            # Signal-flow diagram: bulbs (neurons) + wires (weights)
@@ -118,11 +121,11 @@ PerceptronDemo/
   modal on **every launch** (deferred to the next runloop so the panel is in the
   hierarchy first). UI tests pass the `-skipIntro` launch argument to reach the
   panel directly.
-- **PerceptronPanelViewController.swift** (~414 LOC) — The main screen. Three
+- **PerceptronPanelViewController.swift** (~511 LOC) — The main screen. Three
   columns laid out manually in `viewDidLayoutSubviews` → `layoutPanel()`:
   switches + d-pad (left), weight knobs + BIAS/RATE (center), meter + LED +
-  plates (right). A **LEARN + / RESET / LEARN −** button strip sits along the
-  bottom. Fixed **4×4 grid** (`gridSize = 4`).
+  plates (right). A **LEARN + / RESET / LEARN − / ⚙** button strip sits along
+  the bottom. Fixed **4×4 grid** (`gridSize = 4`).
 - **IntroViewController.swift** (~457 LOC) — The launch "briefing card": what the
   machine does, 1958 history, an illustrated panel inventory (using the
   `Tutorial*` imageset screenshots), and Wikipedia / video links, all in a scroll
@@ -138,7 +141,10 @@ PerceptronDemo/
 
 ### Gear Menu — Save / Load / Examples / About
 
-The panel has a **gear button** (top-right) whose menu offers:
+The panel has a round **gear button** at the right end of the bottom
+LEARN/RESET strip. It's a `PushButton` with a `menu`, so a **single tap opens
+the menu** (`showsMenuAsPrimaryAction` on a transparent `UIButton` overlay — no
+long press on iPad or Mac). The menu offers:
 
 - **Save…** — serializes the full panel state to a `.pcn` file (JSON) and presents
   the system **export** document picker.
@@ -191,10 +197,17 @@ two-part split forced by the sandbox:
 
 `SignalFlowViewController` presents the network as an **illuminated patch panel**
 backed by `MLPEngine` (a `16 → 6 → 1` multi-layer perceptron). Left→right:
-input switch grid → input bulbs → weight-wires → 6 hidden bulbs → output bulb +
-meter/LED. It opens on the bundled, pre-trained **"T Anywhere"** preset, which
-detects a T shape *at any position* in the grid — something the single-layer
-panel provably cannot do.
+input switch grid + joystick → input bulbs → weight-wires → 6 hidden bulbs →
+output bulb + meter/LED. It opens on the bundled, pre-trained **"T Anywhere"**
+preset, which detects a T shape *at any position* in the grid — something the
+single-layer panel provably cannot do.
+
+It's reached from the gear menu and **slides in from the right** while the main
+panel slides out to the left (`SlideTransitionDelegate`, reversed on dismiss),
+as if panning your gaze across the bench. The switch grid uses the same
+`SwitchGrid.Metrics` as the main panel, so the switches are the same size on
+both screens, and the same `DPadControl` joystick sits below it — walking the T
+around the grid while the output LED stays lit is the whole demonstration.
 
 - **`MLPEngine.swift`** — ReLU hidden layer + backprop, ported from the desktop
   `BACKPROP` rule but generalized so `hiddenCount` is independent of
